@@ -539,6 +539,7 @@ namespace MobiFlight.UI.Panels.Config
             if (FilterTextBox.Text != "" && FilterTextBox.Text.Length >= MINIMUM_SEARCH_STRING_LENGTH) FilterText = FilterTextBox.Text;
 
             FilteredPresetList.Items.Clear();
+
             FilteredPresetList.Items.Add(new Msfs2020HubhopPreset()
             {
                 label = "- Select Preset -",
@@ -547,19 +548,25 @@ namespace MobiFlight.UI.Panels.Config
                 description = "No Preset selected."
             });
 
-            HubHopType hubhopType = HubHopType.Output;
-            if (Mode == HubHopPanelMode.Input) hubhopType = HubHopType.AllInputs;
+            // If nothing filtered, keep the result combobox empty. More than 10000 entries lead 
+            // to extended loading times on slower systems.
+            if (!string.IsNullOrEmpty(SelectedVendor) || !string.IsNullOrEmpty(SelectedAircraft) ||
+                !string.IsNullOrEmpty(SelectedSystem) || !string.IsNullOrEmpty(FilterText))
+            {
+                HubHopType hubhopType = HubHopType.Output;
+                if (Mode == HubHopPanelMode.Input) hubhopType = HubHopType.AllInputs;
 
-            FilteredPresetList.Items.AddRange(
-                PresetList.Filtered(
-                    hubhopType,
-                    SelectedVendor,
-                    SelectedAircraft,
-                    SelectedSystem,
-                    FilterText
-                    )
-            );
-            
+                FilteredPresetList.Items.AddRange(
+                    PresetList.Filtered(
+                        hubhopType,
+                        SelectedVendor,
+                        SelectedAircraft,
+                        SelectedSystem,
+                        FilterText
+                        )
+                );
+            }
+
             // Substract 1 because of the static "select preset"-label
             int MatchesFound = FilteredPresetList.Items.Count - 1;
             MatchLabel.Text = String.Format(
