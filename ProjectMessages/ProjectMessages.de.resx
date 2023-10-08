@@ -488,8 +488,8 @@ Respective input actions won't work until they are connected and you have restar
     <comment>{0} matches found.</comment>
   </data>
   <data name="uiMessagesSimConnectPanelShowAll" xml:space="preserve">
-    <value>- Alle zeigen - </value>
-    <comment>- show all - </comment>
+    <value>- Filter setzen - </value>
+    <comment>- set filter - </comment>
   </data>
   <data name="uiSettingsMobiFlightChangeRequiresRestart" xml:space="preserve">
     <value>Diese Änderung benötigt einen Neustart von MobiFlight.</value>

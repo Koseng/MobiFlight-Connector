@@ -149,7 +149,7 @@ namespace MobiFlight.UI.Panels.Config
             // Would have to be JSON too...
             PresetFileUser = Properties.Settings.Default.PresetFileMSFS2020SimVarsUser;
 
-            PresetPanel.Enabled = false;
+            //PresetPanel.Enabled = false;
 
             if (Properties.Settings.Default.SimVarTextBoxExpanded)
             {
@@ -548,25 +548,19 @@ namespace MobiFlight.UI.Panels.Config
                 description = "No Preset selected."
             });
 
-            // If nothing filtered, keep the result combobox empty. More than 10000 entries lead 
-            // to extended loading times on slower systems.
-            if (!string.IsNullOrEmpty(SelectedVendor) || !string.IsNullOrEmpty(SelectedAircraft) ||
-                !string.IsNullOrEmpty(SelectedSystem) || !string.IsNullOrEmpty(FilterText))
-            {
-                HubHopType hubhopType = HubHopType.Output;
-                if (Mode == HubHopPanelMode.Input) hubhopType = HubHopType.AllInputs;
+            HubHopType hubhopType = HubHopType.Output;
+            if (Mode == HubHopPanelMode.Input) hubhopType = HubHopType.AllInputs;
 
-                FilteredPresetList.Items.AddRange(
-                    PresetList.Filtered(
-                        hubhopType,
-                        SelectedVendor,
-                        SelectedAircraft,
-                        SelectedSystem,
-                        FilterText
-                        )
-                );
-            }
-
+            FilteredPresetList.Items.AddRange(
+                PresetList.Filtered(
+                    hubhopType,
+                    SelectedVendor,
+                    SelectedAircraft,
+                    SelectedSystem,
+                    FilterText
+                    )
+            );
+            
             // Substract 1 because of the static "select preset"-label
             int MatchesFound = FilteredPresetList.Items.Count - 1;
             MatchLabel.Text = String.Format(
@@ -595,6 +589,16 @@ namespace MobiFlight.UI.Panels.Config
 
         private void UpdatePresetComboBoxValues()
         {
+            String SelectedVendor = null;
+            String SelectedAircraft = null;
+            String SelectedSystem = null;
+            String FilterText = null;
+
+            if (VendorComboBox.SelectedIndex > 0) SelectedVendor = VendorComboBox.SelectedItem.ToString();
+            if (AircraftComboBox.SelectedIndex > 0) SelectedAircraft = AircraftComboBox.SelectedItem.ToString();
+            if (SystemComboBox.SelectedIndex > 0) SelectedSystem = SystemComboBox.SelectedItem.ToString();
+            if (FilterTextBox.Text != "" && FilterTextBox.Text.Length >= MINIMUM_SEARCH_STRING_LENGTH) FilterText = FilterTextBox.Text;
+
             String SelectedValue = null;
             Msfs2020HubhopPreset selectedPreset = null;
 
@@ -610,25 +614,48 @@ namespace MobiFlight.UI.Panels.Config
             }
 
             PresetComboBox.DataSource = null;
-            PresetComboBox.DataSource = FilteredPresetList.Items;
             PresetComboBox.ValueMember = "id";
             PresetComboBox.DisplayMember = "label";
 
-            if (SelectedValue != null)
-            {                
-                PresetComboBox.SelectedValue = SelectedValue;
+            // If nothing filtered, keep the result combobox empty. More than 10000 entries lead 
+            // to extended loading times on slower systems.
+            if (!string.IsNullOrEmpty(SelectedVendor) || !string.IsNullOrEmpty(SelectedAircraft) ||
+                !string.IsNullOrEmpty(SelectedSystem) || !string.IsNullOrEmpty(FilterText))
+            {
+                PresetComboBox.DataSource = FilteredPresetList.Items;
+                if (SelectedValue != null)
+                {
+                    PresetComboBox.SelectedValue = SelectedValue;
 
-                // we didn't find the preset within the current
-                // list
-                if (PresetComboBox.SelectedValue == null)
-                PresetComboBox.SelectedIndex = 0;
+                    // we didn't find the preset within the current
+                    // list
+                    if (PresetComboBox.SelectedValue == null)
+                        PresetComboBox.SelectedIndex = 0;
+                }
+                else
+                {
+                    PresetComboBox.SelectedIndex = 0;
+                }
+
+                PresetComboBox.Enabled = true;
+                //PresetComboBox.Enabled = (FilteredPresetList.Items.Count > 1);
             }
             else
             {
-                PresetComboBox.SelectedIndex = 0;
-            }
+                var listWithSelect = new List<Msfs2020HubhopPreset>();
+                listWithSelect.Add(new Msfs2020HubhopPreset()
+                {
+                    label = "- Select Preset -",
+                    id = "-",
+                    code = "",
+                    description = "No Preset selected."
+                });
 
-            PresetPanel.Enabled = (FilteredPresetList.Items.Count > 1);
+                PresetComboBox.DataSource = listWithSelect;
+                PresetComboBox.SelectedIndex = 0;
+                PresetComboBox.Enabled = false;
+                MatchLabel.Text = i18n._tr("uiMessagesSimConnectPanelShowAll");
+            }
 
             PresetComboBox.SelectedIndexChanged += PresetComboBox_SelectedIndexChanged;
         }

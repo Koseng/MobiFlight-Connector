@@ -489,7 +489,7 @@ Respective configs won't work until joysticks are connected and you have restart
     <value>{0} matches found.</value>
   </data>
   <data name="uiMessagesSimConnectPanelShowAll" xml:space="preserve">
-    <value>- show all -</value>
+    <value>- set filter -</value>
   </data>
   <data name="uiSettingsMobiFlightChangeRequiresRestart" xml:space="preserve">
     <value>This change will require a restart of MobiFlight to become effective.</value>

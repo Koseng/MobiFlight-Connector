@@ -1136,7 +1136,7 @@ namespace MobiFlight.ProjectMessages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to - show all -.
+        ///   Looks up a localized string similar to - set filter -.
         /// </summary>
         internal static string uiMessagesSimConnectPanelShowAll {
             get {
