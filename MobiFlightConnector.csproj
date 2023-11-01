@@ -242,6 +242,7 @@
     <Compile Include="Base\WriteCacheInterface.cs" />
     <Compile Include="HubHop\HubHopType.cs" />
     <Compile Include="HubHop\Msfs2020EventIdPresetList.cs" />
+    <Compile Include="MobiFlight\InputCacheItem.cs" />
     <Compile Include="MobiFlight\Board.cs" />
     <Compile Include="MobiFlight\BoardDefinitions.cs" />
     <Compile Include="MobiFlight\Clipboard.cs" />

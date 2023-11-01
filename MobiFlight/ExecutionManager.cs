@@ -81,7 +81,7 @@ namespace MobiFlight
 
         DataGridView dataGridViewConfig = null;
         DataGridView inputsDataGridView = null;
-        Dictionary<String, List<Tuple<InputConfigItem, DataGridViewRow>>> inputCache = new Dictionary<string, List<Tuple<InputConfigItem, DataGridViewRow>>>();
+        Dictionary<String, List<InputCacheItem>> InputCache = new Dictionary<string, List<InputCacheItem>> ();
 
         private bool _autoConnectTimerRunning = false;
 
@@ -302,9 +302,9 @@ namespace MobiFlight
 
         internal void OnInputConfigSettingsChanged(object sender, EventArgs e)
         {
-            lock (inputCache)
+            lock (InputCache)
             {
-                inputCache.Clear();
+                InputCache.Clear();
             }
         }
 
@@ -992,7 +992,7 @@ namespace MobiFlight
 #if ARCAZE
             arcazeCache.Clear();
 #endif
-            inputCache.Clear();
+            InputCache.Clear();
             inputActionExecutionCache.Clear();
 
             this.OnStopped(this, new EventArgs());
@@ -1363,11 +1363,11 @@ namespace MobiFlight
 
             var msgEventLabel = $"{e.Name} => {e.DeviceLabel} {(e.ExtPin.HasValue ? $":{e.ExtPin}" : "")} => {eventAction}";
 
-            lock (inputCache)
+            lock (InputCache)
 			{
-                if (!inputCache.ContainsKey(inputKey))
+                if (!InputCache.ContainsKey(inputKey))
                 {
-                    inputCache[inputKey] = new List<Tuple<InputConfigItem, DataGridViewRow>>();
+                    InputCache[inputKey] = new List<InputCacheItem>();                    
                     // check if we have configs for this button
                     // and store it      
 
@@ -1403,8 +1403,8 @@ namespace MobiFlight
                             	if (e.Type == DeviceType.InputMultiplexer && cfg.inputMultiplexer != null && cfg.inputMultiplexer.DataPin != e.ExtPin)
                             	{
                                 	continue;
-                            	}
-                            	inputCache[inputKey].Add(new Tuple<InputConfigItem, DataGridViewRow>(cfg, gridViewRow));
+                            	}                                
+                                InputCache[inputKey].Add(new InputCacheItem { InputConfigItem = cfg, DataGridViewRow = gridViewRow });                          
                         	}
                     	}
                     	catch (Exception ex)
@@ -1416,7 +1416,7 @@ namespace MobiFlight
             	}
 
             	// no config for this button found
-            	if (inputCache[inputKey].Count == 0)
+            	if (InputCache[inputKey].Count == 0)
             	{
                 	if (LogIfNotJoystickOrJoystickAxisEnabled(e.Serial, e.Type))
                     	    Log.Instance.log($"{msgEventLabel} =>  No config found.", LogSeverity.Warn);
@@ -1440,15 +1440,15 @@ namespace MobiFlight
                 moduleCache = mobiFlightCache
             };
 
-            foreach (Tuple<InputConfigItem, DataGridViewRow> tuple in inputCache[inputKey])
+            foreach (InputCacheItem item in InputCache[inputKey])
             {
-                if ((tuple.Item2.DataBoundItem as DataRowView) == null)
+                if ((item.DataGridViewRow.DataBoundItem as DataRowView) == null)
                 {
                     Log.Instance.log("mobiFlightCache_OnButtonPressed: tuple.Item2.DataBoundItem is NULL", LogSeverity.Debug);
                     continue;
                 }
 
-                DataRow row = (tuple.Item2.DataBoundItem as DataRowView).Row;
+                DataRow row = (item.DataGridViewRow.DataBoundItem as DataRowView).Row;
 
                 if (!(bool)row["active"])
                 {
@@ -1459,25 +1459,25 @@ namespace MobiFlight
                 try
                 {
                     // if there are preconditions check and skip if necessary
-                    if (tuple.Item1.Preconditions.Count > 0)
+                    if (item.InputConfigItem.Preconditions.Count > 0)
                     {
-                        if (!CheckPrecondition(tuple.Item1, currentValue))
+                        if (!CheckPrecondition(item.InputConfigItem, currentValue))
                         {
-                            tuple.Item2.ErrorText = i18n._tr("uiMessagePreconditionNotSatisfied");
+                            item.DataGridViewRow.ErrorText = i18n._tr("uiMessagePreconditionNotSatisfied");
                             continue;
                         }
                         else
                         {
-                            tuple.Item2.ErrorText = "";
+                            item.DataGridViewRow.ErrorText = "";
                         }
                     }
 
                     Log.Instance.log($"{msgEventLabel} => executing \"{row["description"]}\"", LogSeverity.Info);
-                
-                    tuple.Item1.execute(
+
+                    item.InputConfigItem.execute(
                         cacheCollection,
                         e,
-                        GetRefs(tuple.Item1.ConfigRefs))
+                        GetRefs(item.InputConfigItem.ConfigRefs))
                         ;
                 }
                 catch (Exception ex)
