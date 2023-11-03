@@ -33,12 +33,12 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.onReleaseActionConfigPanel = new System.Windows.Forms.Panel();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.onLongRelActionConfigPanel = new System.Windows.Forms.Panel();
+            this.onLongReleaseActionConfigPanel = new System.Windows.Forms.Panel();
             this.onPressActionTypePanel = new MobiFlight.UI.Panels.Config.ActionTypePanel();
             this.onReleaseActionTypePanel = new MobiFlight.UI.Panels.Config.ActionTypePanel();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.onLongReleaseActionConfigPanel = new System.Windows.Forms.Panel();
             this.onLongReleaseActionTypePanel = new MobiFlight.UI.Panels.Config.ActionTypePanel();
-            this.onLongRelActionConfigPanel = new System.Windows.Forms.Panel();
             this.tabControl1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -91,7 +91,7 @@
             this.tabPage1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
-            this.tabPage1.Size = new System.Drawing.Size(592, 121);
+            this.tabPage1.Size = new System.Drawing.Size(261, 47);
             this.tabPage1.TabIndex = 2;
             this.tabPage1.Text = "On Release";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -105,8 +105,42 @@
             this.onReleaseActionConfigPanel.Margin = new System.Windows.Forms.Padding(0);
             this.onReleaseActionConfigPanel.MinimumSize = new System.Drawing.Size(0, 154);
             this.onReleaseActionConfigPanel.Name = "onReleaseActionConfigPanel";
-            this.onReleaseActionConfigPanel.Size = new System.Drawing.Size(592, 154);
+            this.onReleaseActionConfigPanel.Size = new System.Drawing.Size(77, 103);
             this.onReleaseActionConfigPanel.TabIndex = 19;
+            // 
+            // tabPage3
+            // 
+            this.tabPage3.Controls.Add(this.onLongRelActionConfigPanel);
+            this.tabPage3.Controls.Add(this.onLongReleaseActionConfigPanel);
+            this.tabPage3.Controls.Add(this.onLongReleaseActionTypePanel);
+            this.tabPage3.Location = new System.Drawing.Point(4, 29);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
+            this.tabPage3.Size = new System.Drawing.Size(261, 47);
+            this.tabPage3.TabIndex = 3;
+            this.tabPage3.Text = "On Long Release";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // onLongRelActionConfigPanel
+            // 
+            this.onLongRelActionConfigPanel.AutoSize = true;
+            this.onLongRelActionConfigPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.onLongRelActionConfigPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.onLongRelActionConfigPanel.Location = new System.Drawing.Point(0, 60);
+            this.onLongRelActionConfigPanel.MinimumSize = new System.Drawing.Size(0, 154);
+            this.onLongRelActionConfigPanel.Name = "onLongRelActionConfigPanel";
+            this.onLongRelActionConfigPanel.Size = new System.Drawing.Size(77, 103);
+            this.onLongRelActionConfigPanel.TabIndex = 2;
+            // 
+            // onLongReleaseActionConfigPanel
+            // 
+            this.onLongReleaseActionConfigPanel.AutoSize = true;
+            this.onLongReleaseActionConfigPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.onLongReleaseActionConfigPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.onLongReleaseActionConfigPanel.Location = new System.Drawing.Point(0, 60);
+            this.onLongReleaseActionConfigPanel.Name = "onLongReleaseActionConfigPanel";
+            this.onLongReleaseActionConfigPanel.Size = new System.Drawing.Size(174, 0);
+            this.onLongReleaseActionConfigPanel.TabIndex = 0;
             // 
             // onPressActionTypePanel
             // 
@@ -125,31 +159,8 @@
             this.onReleaseActionTypePanel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 9);
             this.onReleaseActionTypePanel.Name = "onReleaseActionTypePanel";
             this.onReleaseActionTypePanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 9);
-            this.onReleaseActionTypePanel.Size = new System.Drawing.Size(592, 54);
+            this.onReleaseActionTypePanel.Size = new System.Drawing.Size(261, 54);
             this.onReleaseActionTypePanel.TabIndex = 20;
-            // 
-            // tabPage3
-            // 
-            this.tabPage3.Controls.Add(this.onLongRelActionConfigPanel);
-            this.tabPage3.Controls.Add(this.onLongReleaseActionTypePanel);
-            this.tabPage3.Controls.Add(this.onLongReleaseActionConfigPanel);
-            this.tabPage3.Location = new System.Drawing.Point(4, 29);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
-            this.tabPage3.Size = new System.Drawing.Size(592, 121);
-            this.tabPage3.TabIndex = 3;
-            this.tabPage3.Text = "On Long Release";
-            this.tabPage3.UseVisualStyleBackColor = true;
-            // 
-            // onLongReleaseActionConfigPanel
-            // 
-            this.onLongReleaseActionConfigPanel.AutoSize = true;
-            this.onLongReleaseActionConfigPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.onLongReleaseActionConfigPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.onLongReleaseActionConfigPanel.Location = new System.Drawing.Point(0, 5);
-            this.onLongReleaseActionConfigPanel.Name = "onLongReleaseActionConfigPanel";
-            this.onLongReleaseActionConfigPanel.Size = new System.Drawing.Size(592, 0);
-            this.onLongReleaseActionConfigPanel.TabIndex = 0;
             // 
             // onLongReleaseActionTypePanel
             // 
@@ -158,19 +169,8 @@
             this.onLongReleaseActionTypePanel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 9);
             this.onLongReleaseActionTypePanel.Name = "onLongReleaseActionTypePanel";
             this.onLongReleaseActionTypePanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 9);
-            this.onLongReleaseActionTypePanel.Size = new System.Drawing.Size(592, 55);
+            this.onLongReleaseActionTypePanel.Size = new System.Drawing.Size(261, 55);
             this.onLongReleaseActionTypePanel.TabIndex = 1;
-            // 
-            // onLongRelActionConfigPanel
-            // 
-            this.onLongRelActionConfigPanel.AutoSize = true;
-            this.onLongRelActionConfigPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.onLongRelActionConfigPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.onLongRelActionConfigPanel.Location = new System.Drawing.Point(0, 60);
-            this.onLongRelActionConfigPanel.MinimumSize = new System.Drawing.Size(0, 154);
-            this.onLongRelActionConfigPanel.Name = "onLongRelActionConfigPanel";
-            this.onLongRelActionConfigPanel.Size = new System.Drawing.Size(592, 154);
-            this.onLongRelActionConfigPanel.TabIndex = 2;
             // 
             // ButtonPanel
             // 

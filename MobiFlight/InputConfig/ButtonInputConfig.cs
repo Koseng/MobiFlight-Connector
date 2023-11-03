@@ -10,7 +10,6 @@ namespace MobiFlight.InputConfig
         public InputAction onRelease;
         public InputAction onLongRelease;
 
-
         public object Clone()
         {
             ButtonInputConfig clone = new ButtonInputConfig();
@@ -54,6 +53,37 @@ namespace MobiFlight.InputConfig
 
             if(reader.NodeType==System.Xml.XmlNodeType.EndElement)
                 reader.Read();
+        }
+
+        public void SetInputActionByName(string name, InputAction inputAction)
+        {
+            switch (name)
+            {
+                case "onPress":
+                    onPress = inputAction;
+                    break;
+                case "onRelease":
+                    onRelease = inputAction;
+                    break;                   
+                case "onLongRelease":
+                    onLongRelease = inputAction;
+                    break;                          
+            }
+        }
+
+        public InputAction GetInputActionByName(string name)
+        {
+            switch (name)
+            {
+                case "onPress":
+                    return onPress;
+                case "onRelease":
+                    return onRelease;
+                case "onLongRelease":
+                    return onLongRelease;
+                default:
+                    return null;
+            }        
         }
 
         public List<InputAction> GetInputActionsByType(Type type)
