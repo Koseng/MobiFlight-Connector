@@ -194,5 +194,17 @@ namespace MobiFlight.UI.Panels.Input
                 }
             }
         }
+
+        // Allow only digits
+        private void delayTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+        }
+
+        // Allow only digits
+        private void repeatTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+        }
     }
 }
