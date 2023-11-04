@@ -6,16 +6,21 @@ namespace MobiFlight.InputConfig
 {
     public class ButtonInputConfig : IXmlSerializable, ICloneable
     {
-        public InputAction onPress;
-        public InputAction onRelease;
+        public InputAction onPress;        
+        public InputAction onRelease;        
         public InputAction onLongRelease;
+        public InputAction onLongPress;
+
+        private InputEventArgs PreviousInputEvent;
+        private const int DELAY_LONG_RELEASE = 350; //ms
 
         public object Clone()
         {
             ButtonInputConfig clone = new ButtonInputConfig();
             if (onPress != null) clone.onPress = (InputAction)onPress.Clone();
-            if (onRelease != null) clone.onRelease = (InputAction)onRelease.Clone();
+            if (onRelease != null) clone.onRelease = (InputAction)onRelease.Clone();            
             if (onLongRelease != null) clone.onLongRelease = (InputAction)onLongRelease.Clone();
+            if (onLongPress != null) clone.onLongPress = (InputAction)onLongPress.Clone();
             return clone;
         }
 
@@ -51,7 +56,15 @@ namespace MobiFlight.InputConfig
                 reader.Read(); // closing onLongRelease
             }
 
-            if(reader.NodeType==System.Xml.XmlNodeType.EndElement)
+            if (reader.LocalName == "") reader.Read();
+            if (reader.LocalName == "onLongPress")
+            {
+                onLongPress = InputActionFactory.CreateByType(reader["type"]);
+                onLongPress?.ReadXml(reader);
+                reader.Read(); // closing onLongRelease
+            }
+
+            if (reader.NodeType==System.Xml.XmlNodeType.EndElement)
                 reader.Read();
         }
 
@@ -67,7 +80,10 @@ namespace MobiFlight.InputConfig
                     break;                   
                 case "onLongRelease":
                     onLongRelease = inputAction;
-                    break;                          
+                    break;
+                case "onLongPress":
+                    onLongPress = inputAction;
+                    break;
             }
         }
 
@@ -81,6 +97,8 @@ namespace MobiFlight.InputConfig
                     return onRelease;
                 case "onLongRelease":
                     return onLongRelease;
+                case "onLongPress":
+                    return onLongPress;
                 default:
                     return null;
             }        
@@ -95,48 +113,89 @@ namespace MobiFlight.InputConfig
                 result.Add(onRelease);
             if (onLongRelease != null && onLongRelease.GetType() == type)
                 result.Add(onLongRelease);
+            if (onLongPress != null && onLongPress.GetType() == type)
+                result.Add(onLongPress);
             return result;
         }
 
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            writer.WriteStartElement("onPress");
-            if (onPress != null) onPress.WriteXml(writer);
-            writer.WriteEndElement();
+            if (onPress != null)
+            {
+                writer.WriteStartElement("onPress");
+                onPress.WriteXml(writer);
+                writer.WriteEndElement();
+            }
 
-            writer.WriteStartElement("onRelease");
-            if (onRelease != null) onRelease.WriteXml(writer);
-            writer.WriteEndElement();
+            if (onRelease != null)
+            {
+                writer.WriteStartElement("onRelease");
+                onRelease.WriteXml(writer);
+                writer.WriteEndElement();
+            }
 
-            writer.WriteStartElement("onLongRelease");
-            if (onLongRelease != null) onLongRelease.WriteXml(writer);
-            writer.WriteEndElement();
+            if (onLongRelease != null)
+            {
+                writer.WriteStartElement("onLongRelease");
+                onLongRelease.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+
+            if (onLongPress != null)
+            {
+                writer.WriteStartElement("onLongPress");
+                onLongPress.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+        }
+
+        private void CheckAndAdaptForLongButtonRelease(InputEventArgs current, InputEventArgs previous)
+        {
+            var inputEvent = (MobiFlightButton.InputEvent)current.Value;
+            TimeSpan timeSpanToPreviousInput = current.Time - previous.Time;
+
+            if (onLongRelease != null &&
+                inputEvent == MobiFlightButton.InputEvent.RELEASE &&                
+                timeSpanToPreviousInput > TimeSpan.FromMilliseconds(DELAY_LONG_RELEASE))
+            {
+                current.Value = (int)MobiFlightButton.InputEvent.LONG_RELEASE;
+                Log.Instance.log($"{current.Name} => {current.DeviceLabel}  => Execute as LONG_RELEASE", LogSeverity.Info);
+            }
         }
 
         internal void execute(CacheCollection cacheCollection, 
                               InputEventArgs args, 
                               List<ConfigRefValue> configRefs)
         {
+            if (PreviousInputEvent == null) PreviousInputEvent = args;
+
+            CheckAndAdaptForLongButtonRelease(args, PreviousInputEvent);
+
+            // von außen kommen nur Press und Release.
+
             var inputEvent = (MobiFlightButton.InputEvent)args.Value;
+
             if (inputEvent == MobiFlightButton.InputEvent.PRESS && onPress != null)
             {
-                onPress.execute(cacheCollection, args, configRefs);
+                if (onPress != null)
+                {
+                    onPress.execute(cacheCollection, args, configRefs);
+                }
+                else if (onLongPress != null)
+                {
+                    // Todo start long press process                   
+                }                    
             }
             else if (inputEvent == MobiFlightButton.InputEvent.RELEASE && onRelease != null)
             {
+                // Abort active long press process
                 onRelease.execute(cacheCollection, args, configRefs);
             }
-            else if (inputEvent == MobiFlightButton.InputEvent.LONG_RELEASE)                
+            else if (inputEvent == MobiFlightButton.InputEvent.LONG_RELEASE && onLongRelease != null)
             {
-                if (onLongRelease != null)
-                {
-                    onLongRelease.execute(cacheCollection, args, configRefs);
-                }
-                else if (onRelease != null)
-                {
-                    onRelease.execute(cacheCollection, args, configRefs);
-                }                
+                onLongRelease.execute(cacheCollection, args, configRefs);
             }
+            PreviousInputEvent = args;
         }
 
         public Dictionary<String, int> GetStatistics()
@@ -163,6 +222,12 @@ namespace MobiFlight.InputConfig
                 result["Input." + onLongRelease.GetType().Name] = 1;
             }
 
+            if (onLongPress != null)
+            {
+                result["Input.OnLongPress"] = 1;
+                result["Input." + onLongPress.GetType().Name] = 1;
+            }
+
             return result;
         }
 
@@ -180,6 +245,10 @@ namespace MobiFlight.InputConfig
                 (
                     (onLongRelease == null && ((obj as ButtonInputConfig).onLongRelease == null)) ||
                     (onLongRelease != null && onLongRelease.Equals((obj as ButtonInputConfig).onLongRelease))
+                ) &&
+                (
+                    (onLongPress == null && ((obj as ButtonInputConfig).onLongPress == null)) ||
+                    (onLongPress != null && onLongPress.Equals((obj as ButtonInputConfig).onLongPress))
                 );
         }
     }
