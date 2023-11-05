@@ -16,8 +16,8 @@ namespace MobiFlight.InputConfig
         private List<ConfigRefValue> LastOnPressConfigRefs;
 
         private const int DELAY_LONG_RELEASE = 350; //ms
-        public int LongPressDelay = 1000;
-        public int RepeatDelay = 150;
+        public int LongPressDelay = 400;
+        public int RepeatDelay = 0;
 
         private System.Windows.Forms.Timer LongPressTimer = new System.Windows.Forms.Timer();
         private System.Windows.Forms.Timer RepeatTimer = new System.Windows.Forms.Timer();
@@ -73,6 +73,10 @@ namespace MobiFlight.InputConfig
             if (reader.LocalName == "") reader.Read();
             if (reader.LocalName == "onLongPress")
             {
+                string longPressDelay = reader["longPressDelay"];
+                string repeatDelay = reader["repeatDelay"];
+                LongPressDelay = int.Parse(longPressDelay);
+                RepeatDelay = int.Parse(repeatDelay);                
                 onLongPress = InputActionFactory.CreateByType(reader["type"]);
                 onLongPress?.ReadXml(reader);
                 reader.Read(); // closing onLongRelease
@@ -158,6 +162,8 @@ namespace MobiFlight.InputConfig
             if (onLongPress != null)
             {
                 writer.WriteStartElement("onLongPress");
+                writer.WriteAttributeString("longPressDelay", LongPressDelay.ToString());
+                writer.WriteAttributeString("repeatDelay", RepeatDelay.ToString());               
                 onLongPress.WriteXml(writer);
                 writer.WriteEndElement();
             }

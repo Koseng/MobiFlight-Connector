@@ -43,10 +43,12 @@ namespace MobiFlight.UI.Panels.Input
             ActionTypePanelsToActionNames.Add(onPressActionTypePanel, "onPress");
             ActionTypePanelsToActionNames.Add(onReleaseActionTypePanel, "onRelease");
             ActionTypePanelsToActionNames.Add(onLongReleaseActionTypePanel, "onLongRelease");
+            ActionTypePanelsToActionNames.Add(onLongPressActionTypePanel, "onLongPress");
 
             ActionTypePanelsToOwnerPanels.Add(onPressActionTypePanel, onPressActionConfigPanel);
             ActionTypePanelsToOwnerPanels.Add(onReleaseActionTypePanel, onReleaseActionConfigPanel);
-            ActionTypePanelsToOwnerPanels.Add(onLongReleaseActionTypePanel, onLongRelActionConfigPanel);      
+            ActionTypePanelsToOwnerPanels.Add(onLongReleaseActionTypePanel, onLongRelActionConfigPanel);
+            ActionTypePanelsToOwnerPanels.Add(onLongPressActionTypePanel, onLongPressActionConfigPanel);
 
             foreach (ActionTypePanel panel in ActionTypePanelsToActionNames.Keys)
             {
@@ -162,6 +164,8 @@ namespace MobiFlight.UI.Panels.Input
             if (config == null) return;
 
             _config = config;
+            delayTextBox.Text = config.LongPressDelay.ToString();
+            repeatTextBox.Text = config.RepeatDelay.ToString();
 
             // Iterate through all ActionTypePanels and read config
             foreach (var actionTypePanel in ActionTypePanelsToOwnerPanels.Keys)
@@ -177,7 +181,17 @@ namespace MobiFlight.UI.Panels.Input
 
         public void ToConfig(ButtonInputConfig config)
         {
-           // Iterate through all ActionTypePanels and set config
+            if (!string.IsNullOrEmpty(delayTextBox.Text))
+            {
+                _config.LongPressDelay = int.Parse(delayTextBox.Text);
+            }
+
+            if (!string.IsNullOrEmpty(delayTextBox.Text))
+            {
+                _config.RepeatDelay = int.Parse(repeatTextBox.Text);
+            }
+
+            // Iterate through all ActionTypePanels and set config
             foreach (var actionTypePanel in ActionTypePanelsToOwnerPanels.Keys)
             {
                 if (actionTypePanel.ActionTypeComboBox.SelectedItem != null)

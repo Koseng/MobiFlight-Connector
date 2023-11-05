@@ -37,7 +37,7 @@
             this.onReleaseActionTypePanel = new MobiFlight.UI.Panels.Config.ActionTypePanel();
             this.onLongPressTabPage = new System.Windows.Forms.TabPage();
             this.onLongPressActionConfigPanel = new System.Windows.Forms.Panel();
-            this.actionTypePanel1 = new MobiFlight.UI.Panels.Config.ActionTypePanel();
+            this.onLongPressActionTypePanel = new MobiFlight.UI.Panels.Config.ActionTypePanel();
             this.onLongPressSettingsPanel = new System.Windows.Forms.Panel();
             this.msLabel = new System.Windows.Forms.Label();
             this.repeatTextBox = new System.Windows.Forms.TextBox();
@@ -142,7 +142,7 @@
             // onLongPressTabPage
             // 
             this.onLongPressTabPage.Controls.Add(this.onLongPressActionConfigPanel);
-            this.onLongPressTabPage.Controls.Add(this.actionTypePanel1);
+            this.onLongPressTabPage.Controls.Add(this.onLongPressActionTypePanel);
             this.onLongPressTabPage.Controls.Add(this.onLongPressSettingsPanel);
             this.onLongPressTabPage.Location = new System.Drawing.Point(4, 29);
             this.onLongPressTabPage.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -163,15 +163,15 @@
             this.onLongPressActionConfigPanel.Size = new System.Drawing.Size(592, 154);
             this.onLongPressActionConfigPanel.TabIndex = 2;
             // 
-            // actionTypePanel1
+            // onLongPressActionTypePanel
             // 
-            this.actionTypePanel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.actionTypePanel1.Location = new System.Drawing.Point(0, 59);
-            this.actionTypePanel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 9);
-            this.actionTypePanel1.Name = "actionTypePanel1";
-            this.actionTypePanel1.Padding = new System.Windows.Forms.Padding(0, 0, 0, 9);
-            this.actionTypePanel1.Size = new System.Drawing.Size(592, 56);
-            this.actionTypePanel1.TabIndex = 1;
+            this.onLongPressActionTypePanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.onLongPressActionTypePanel.Location = new System.Drawing.Point(0, 59);
+            this.onLongPressActionTypePanel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 9);
+            this.onLongPressActionTypePanel.Name = "onLongPressActionTypePanel";
+            this.onLongPressActionTypePanel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 9);
+            this.onLongPressActionTypePanel.Size = new System.Drawing.Size(592, 56);
+            this.onLongPressActionTypePanel.TabIndex = 1;
             // 
             // onLongPressSettingsPanel
             // 
@@ -309,7 +309,7 @@
         private Config.ActionTypePanel onLongReleaseActionTypePanel;
         private System.Windows.Forms.TabPage onLongPressTabPage;
         private System.Windows.Forms.Panel onLongPressSettingsPanel;
-        private Config.ActionTypePanel actionTypePanel1;
+        private Config.ActionTypePanel onLongPressActionTypePanel;
         private System.Windows.Forms.Panel onLongPressActionConfigPanel;    
         private System.Windows.Forms.TextBox delayTextBox;
         private System.Windows.Forms.Label msLabel;
