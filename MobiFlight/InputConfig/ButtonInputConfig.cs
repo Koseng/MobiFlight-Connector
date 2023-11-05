@@ -11,8 +11,8 @@ namespace MobiFlight.InputConfig
         public InputAction onLongRelease;
         public InputAction onLongPress;
 
-        private CacheCollection LastOnPressCacheCollection;
         private InputEventArgs LastOnPressEvent;
+        private CacheCollection LastOnPressCacheCollection;        
         private List<ConfigRefValue> LastOnPressConfigRefs;
 
         private const int DELAY_LONG_RELEASE = 350; //ms
@@ -173,7 +173,8 @@ namespace MobiFlight.InputConfig
         {
             InputEventArgs args = (InputEventArgs)LastOnPressEvent.Clone();
             args.Value = (int)MobiFlightButton.InputEvent.LONG_PRESS;
-            onPress.execute(LastOnPressCacheCollection, args, LastOnPressConfigRefs);
+            Log.Instance.log($"{args.Name} => {args.DeviceLabel}  => Execute LONG_PRESS", LogSeverity.Info);
+            onLongPress.execute(LastOnPressCacheCollection, args, LastOnPressConfigRefs);
         }
 
         private void RepeatTimer_Tick(object sender, EventArgs e)
@@ -218,15 +219,18 @@ namespace MobiFlight.InputConfig
         private void CheckAndAdaptForLongButtonRelease(InputEventArgs current, InputEventArgs previous)
         {
             var inputEvent = (MobiFlightButton.InputEvent)current.Value;
-            TimeSpan timeSpanToPreviousInput = current.Time - previous.Time;
+            
 
             if (inputEvent == MobiFlightButton.InputEvent.RELEASE &&
                 onLongRelease != null &&
-                previous != null &&
-                timeSpanToPreviousInput > TimeSpan.FromMilliseconds(DELAY_LONG_RELEASE))
+                previous != null)
             {
-                current.Value = (int)MobiFlightButton.InputEvent.LONG_RELEASE;
-                Log.Instance.log($"{current.Name} => {current.DeviceLabel}  => Execute as LONG_RELEASE", LogSeverity.Info);
+                TimeSpan timeSpanToPreviousInput = current.Time - previous.Time;
+                if (timeSpanToPreviousInput > TimeSpan.FromMilliseconds(DELAY_LONG_RELEASE))
+                {
+                    current.Value = (int)MobiFlightButton.InputEvent.LONG_RELEASE;
+                    Log.Instance.log($"{current.Name} => {current.DeviceLabel}  => Execute as LONG_RELEASE", LogSeverity.Info);
+                }
             }
         }
 
@@ -328,9 +332,9 @@ namespace MobiFlight.InputConfig
 
         public override bool Equals(object obj)
         {
-            return obj != null && obj is ButtonInputConfig && 
+            return obj != null && obj is ButtonInputConfig &&
                 (
-                    (onPress == null && ((obj as ButtonInputConfig).onPress == null)) || 
+                    (onPress == null && ((obj as ButtonInputConfig).onPress == null)) ||
                     (onPress != null && onPress.Equals((obj as ButtonInputConfig).onPress))
                 ) &&
                 (
@@ -344,6 +348,10 @@ namespace MobiFlight.InputConfig
                 (
                     (onLongPress == null && ((obj as ButtonInputConfig).onLongPress == null)) ||
                     (onLongPress != null && onLongPress.Equals((obj as ButtonInputConfig).onLongPress))
+                ) &&
+                (
+                    (LongPressDelay == (obj as ButtonInputConfig).LongPressDelay) &&
+                    (RepeatDelay == (obj as ButtonInputConfig).RepeatDelay)
                 );
         }
     }

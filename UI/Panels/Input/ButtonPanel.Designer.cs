@@ -155,6 +155,7 @@
             // 
             // onLongPressActionConfigPanel
             // 
+            this.onLongPressActionConfigPanel.AutoSize = true;
             this.onLongPressActionConfigPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.onLongPressActionConfigPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.onLongPressActionConfigPanel.Location = new System.Drawing.Point(0, 115);
