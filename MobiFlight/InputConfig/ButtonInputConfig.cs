@@ -11,8 +11,22 @@ namespace MobiFlight.InputConfig
         public InputAction onLongRelease;
         public InputAction onLongPress;
 
-        private InputEventArgs PreviousInputEvent;
+        private CacheCollection LastOnPressCacheCollection;
+        private InputEventArgs LastOnPressEvent;
+        private List<ConfigRefValue> LastOnPressConfigRefs;
+
         private const int DELAY_LONG_RELEASE = 350; //ms
+        public int LongPressDelay = 1000;
+        public int RepeatDelay = 150;
+
+        private System.Windows.Forms.Timer LongPressTimer = new System.Windows.Forms.Timer();
+        private System.Windows.Forms.Timer RepeatTimer = new System.Windows.Forms.Timer();
+
+        public ButtonInputConfig()
+        {           
+            LongPressTimer.Tick += LongPressDelayTimer_Tick;
+            RepeatTimer.Tick += RepeatTimer_Tick;
+        }
 
         public object Clone()
         {
@@ -149,13 +163,60 @@ namespace MobiFlight.InputConfig
             }
         }
 
+        private void ExecuteOnLongPressAction()
+        {
+            InputEventArgs args = (InputEventArgs)LastOnPressEvent.Clone();
+            args.Value = (int)MobiFlightButton.InputEvent.LONG_PRESS;
+            onPress.execute(LastOnPressCacheCollection, args, LastOnPressConfigRefs);
+        }
+
+        private void RepeatTimer_Tick(object sender, EventArgs e)
+        {
+            ExecuteOnLongPressAction();
+        }
+
+        private void LongPressDelayTimer_Tick(object sender, EventArgs e)
+        {
+            ExecuteOnLongPressAction();
+            LongPressTimer.Stop();
+
+            if (RepeatDelay > 0)
+            {
+                RepeatTimer.Interval = RepeatDelay;
+                RepeatTimer.Start();
+            }
+        }
+
+        private void StartTimer()
+        {
+            if (LongPressDelay > 0)
+            {
+                LongPressTimer.Interval = LongPressDelay;
+                LongPressTimer.Start();
+            }
+            else if (RepeatDelay > 0)
+            {
+                RepeatTimer.Interval = RepeatDelay;
+                RepeatTimer.Start();
+            }
+        }
+
+        private void CheckAndStopTimer()
+        {
+            if (LongPressTimer.Enabled)
+                LongPressTimer.Stop();
+            if (RepeatTimer.Enabled)
+                RepeatTimer.Stop();
+        }
+
         private void CheckAndAdaptForLongButtonRelease(InputEventArgs current, InputEventArgs previous)
         {
             var inputEvent = (MobiFlightButton.InputEvent)current.Value;
             TimeSpan timeSpanToPreviousInput = current.Time - previous.Time;
 
-            if (onLongRelease != null &&
-                inputEvent == MobiFlightButton.InputEvent.RELEASE &&                
+            if (inputEvent == MobiFlightButton.InputEvent.RELEASE &&
+                onLongRelease != null &&
+                previous != null &&
                 timeSpanToPreviousInput > TimeSpan.FromMilliseconds(DELAY_LONG_RELEASE))
             {
                 current.Value = (int)MobiFlightButton.InputEvent.LONG_RELEASE;
@@ -163,39 +224,67 @@ namespace MobiFlight.InputConfig
             }
         }
 
+        private void ExecuteOnPressAction(CacheCollection cacheCollection,
+                                          InputEventArgs args,
+                                          List<ConfigRefValue> configRefs)
+        {
+            LastOnPressEvent = args;
+            LastOnPressCacheCollection = cacheCollection;
+            LastOnPressConfigRefs = configRefs;
+
+            if (onPress != null)
+            {
+                onPress.execute(cacheCollection, args, configRefs);
+            }
+            if (onLongPress != null)
+            {
+                // LongPress will be executed after timer tick.
+                StartTimer();
+            }
+        }
+
+        private void ExecuteOnReleaseAction(CacheCollection cacheCollection,
+                                            InputEventArgs args,
+                                            List<ConfigRefValue> configRefs)
+        {
+            CheckAndStopTimer();
+            if (onRelease != null)
+            {
+                onRelease.execute(cacheCollection, args, configRefs);
+            }
+        }
+
+        private void ExecuteOnLongReleaseAction(CacheCollection cacheCollection,
+                                                InputEventArgs args,
+                                                List<ConfigRefValue> configRefs)
+        {
+            CheckAndStopTimer();
+            if (onLongRelease != null)
+            {
+                onLongRelease.execute(cacheCollection, args, configRefs);
+            }
+        }
+
         internal void execute(CacheCollection cacheCollection, 
                               InputEventArgs args, 
                               List<ConfigRefValue> configRefs)
         {
-            if (PreviousInputEvent == null) PreviousInputEvent = args;
+            CheckAndAdaptForLongButtonRelease(args, LastOnPressEvent);
 
-            CheckAndAdaptForLongButtonRelease(args, PreviousInputEvent);
-
-            // von außen kommen nur Press und Release.
-
-            var inputEvent = (MobiFlightButton.InputEvent)args.Value;
-
-            if (inputEvent == MobiFlightButton.InputEvent.PRESS && onPress != null)
+            switch ((MobiFlightButton.InputEvent)args.Value)
             {
-                if (onPress != null)
-                {
-                    onPress.execute(cacheCollection, args, configRefs);
-                }
-                else if (onLongPress != null)
-                {
-                    // Todo start long press process                   
-                }                    
+                case MobiFlightButton.InputEvent.PRESS:
+                    ExecuteOnPressAction(cacheCollection, args, configRefs);
+                    break;
+                case MobiFlightButton.InputEvent.RELEASE:
+                    ExecuteOnReleaseAction(cacheCollection, args, configRefs);
+                    break;
+                case MobiFlightButton.InputEvent.LONG_RELEASE:
+                    ExecuteOnLongReleaseAction(cacheCollection, args, configRefs);
+                    break;
+                default:
+                    break;
             }
-            else if (inputEvent == MobiFlightButton.InputEvent.RELEASE && onRelease != null)
-            {
-                // Abort active long press process
-                onRelease.execute(cacheCollection, args, configRefs);
-            }
-            else if (inputEvent == MobiFlightButton.InputEvent.LONG_RELEASE && onLongRelease != null)
-            {
-                onLongRelease.execute(cacheCollection, args, configRefs);
-            }
-            PreviousInputEvent = args;
         }
 
         public Dictionary<String, int> GetStatistics()
