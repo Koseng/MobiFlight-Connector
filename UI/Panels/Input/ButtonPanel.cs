@@ -183,13 +183,18 @@ namespace MobiFlight.UI.Panels.Input
                 if (actionTypePanel.ActionTypeComboBox.SelectedItem != null)
                 {
                     var ownerPanel = ActionTypePanelsToOwnerPanels[actionTypePanel];
+                    string inputActionName = ActionTypePanelsToActionNames[actionTypePanel];
 
                     // Does the ownerPanel contain an action config panel?
                     if (ownerPanel.Controls.Count > 0)
                     {
-                        InputAction inputAction = ((IPanelConfigSync)ownerPanel.Controls[0]).ToConfig();
-                        string inputActionName = ActionTypePanelsToActionNames[actionTypePanel];
+                        InputAction inputAction = ((IPanelConfigSync)ownerPanel.Controls[0]).ToConfig();                        
                         config.SetInputActionByName(inputActionName, inputAction);
+                    }
+                    // case "None", reset to Null
+                    else
+                    {
+                        config.SetInputActionByName(inputActionName, null);
                     }
                 }
             }
