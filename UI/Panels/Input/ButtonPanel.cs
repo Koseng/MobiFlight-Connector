@@ -164,8 +164,9 @@ namespace MobiFlight.UI.Panels.Input
             if (config == null) return;
 
             _config = config;
-            delayTextBox.Text = config.LongPressDelay.ToString();
+            longPressDelayTextBox.Text = config.LongPressDelay.ToString();
             repeatTextBox.Text = config.RepeatDelay.ToString();
+            longReleaseTextBox.Text = config.LongReleaseDelay.ToString();
 
             // Iterate through all ActionTypePanels and read config
             foreach (var actionTypePanel in ActionTypePanelsToOwnerPanels.Keys)
@@ -181,14 +182,19 @@ namespace MobiFlight.UI.Panels.Input
 
         public void ToConfig(ButtonInputConfig config)
         {
-            if (!string.IsNullOrEmpty(delayTextBox.Text))
+            if (!string.IsNullOrEmpty(longPressDelayTextBox.Text))
             {
-                _config.LongPressDelay = int.Parse(delayTextBox.Text);
+                _config.LongPressDelay = int.Parse(longPressDelayTextBox.Text);
             }
 
-            if (!string.IsNullOrEmpty(delayTextBox.Text))
+            if (!string.IsNullOrEmpty(repeatTextBox.Text))
             {
                 _config.RepeatDelay = int.Parse(repeatTextBox.Text);
+            }
+
+            if (!string.IsNullOrEmpty(longReleaseTextBox.Text))
+            {
+                _config.LongReleaseDelay = int.Parse(longReleaseTextBox.Text);
             }
 
             // Iterate through all ActionTypePanels and set config
@@ -215,13 +221,7 @@ namespace MobiFlight.UI.Panels.Input
         }
 
         // Allow only digits
-        private void delayTextBox_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
-        }
-
-        // Allow only digits
-        private void repeatTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        private void textBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
         }

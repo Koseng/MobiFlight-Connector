@@ -15,7 +15,7 @@ namespace MobiFlight.InputConfig
         private CacheCollection LastOnPressCacheCollection;        
         private List<ConfigRefValue> LastOnPressConfigRefs;
 
-        private const int DELAY_LONG_RELEASE = 350; //ms
+        public int LongReleaseDelay = 350; //ms
         public int LongPressDelay = 400;
         public int RepeatDelay = 0;
 
@@ -37,6 +37,7 @@ namespace MobiFlight.InputConfig
             if (onLongPress != null) clone.onLongPress = (InputAction)onLongPress.Clone();
             clone.RepeatDelay = RepeatDelay;
             clone.LongPressDelay = LongPressDelay;
+            clone.LongReleaseDelay = LongReleaseDelay;
             return clone;
         }
 
@@ -67,6 +68,10 @@ namespace MobiFlight.InputConfig
             if (reader.LocalName == "") reader.Read();
             if (reader.LocalName == "onLongRelease")
             {
+                if (reader["longReleaseDelay"] != null)
+                {
+                    LongReleaseDelay = int.Parse(reader["longReleaseDelay"]);
+                }
                 onLongRelease = InputActionFactory.CreateByType(reader["type"]);
                 onLongRelease?.ReadXml(reader);
                 reader.Read(); // closing onLongRelease
@@ -75,10 +80,8 @@ namespace MobiFlight.InputConfig
             if (reader.LocalName == "") reader.Read();
             if (reader.LocalName == "onLongPress")
             {
-                string longPressDelay = reader["longPressDelay"];
-                string repeatDelay = reader["repeatDelay"];
-                LongPressDelay = int.Parse(longPressDelay);
-                RepeatDelay = int.Parse(repeatDelay);                
+                LongPressDelay = int.Parse(reader["longPressDelay"]);
+                RepeatDelay = int.Parse(reader["repeatDelay"]);                
                 onLongPress = InputActionFactory.CreateByType(reader["type"]);
                 onLongPress?.ReadXml(reader);
                 reader.Read(); // closing onLongRelease
@@ -157,6 +160,7 @@ namespace MobiFlight.InputConfig
             if (onLongRelease != null)
             {
                 writer.WriteStartElement("onLongRelease");
+                writer.WriteAttributeString("longReleaseDelay", LongReleaseDelay.ToString());
                 onLongRelease.WriteXml(writer);
                 writer.WriteEndElement();
             }
@@ -228,7 +232,7 @@ namespace MobiFlight.InputConfig
                 previous != null)
             {
                 TimeSpan timeSpanToPreviousInput = current.Time - previous.Time;
-                if (timeSpanToPreviousInput > TimeSpan.FromMilliseconds(DELAY_LONG_RELEASE))
+                if (timeSpanToPreviousInput > TimeSpan.FromMilliseconds(LongReleaseDelay))
                 {
                     current.Value = (int)MobiFlightButton.InputEvent.LONG_RELEASE;
                     Log.Instance.log($"{current.Name} => {current.DeviceLabel}  => Execute as LONG_RELEASE", LogSeverity.Info);
@@ -345,15 +349,14 @@ namespace MobiFlight.InputConfig
                 ) &&
                 (
                     (onLongRelease == null && ((obj as ButtonInputConfig).onLongRelease == null)) ||
-                    (onLongRelease != null && onLongRelease.Equals((obj as ButtonInputConfig).onLongRelease))
+                    (onLongRelease != null && onLongRelease.Equals((obj as ButtonInputConfig).onLongRelease) &&
+                    (LongReleaseDelay == (obj as ButtonInputConfig).LongReleaseDelay))
                 ) &&
                 (
                     (onLongPress == null && ((obj as ButtonInputConfig).onLongPress == null)) ||
-                    (onLongPress != null && onLongPress.Equals((obj as ButtonInputConfig).onLongPress))
-                ) &&
-                (
+                    (onLongPress != null && onLongPress.Equals((obj as ButtonInputConfig).onLongPress) &&
                     (LongPressDelay == (obj as ButtonInputConfig).LongPressDelay) &&
-                    (RepeatDelay == (obj as ButtonInputConfig).RepeatDelay)
+                    (RepeatDelay == (obj as ButtonInputConfig).RepeatDelay))
                 );
         }
     }
