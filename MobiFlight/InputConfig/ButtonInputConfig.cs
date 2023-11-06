@@ -35,6 +35,8 @@ namespace MobiFlight.InputConfig
             if (onRelease != null) clone.onRelease = (InputAction)onRelease.Clone();            
             if (onLongRelease != null) clone.onLongRelease = (InputAction)onLongRelease.Clone();
             if (onLongPress != null) clone.onLongPress = (InputAction)onLongPress.Clone();
+            clone.RepeatDelay = RepeatDelay;
+            clone.LongPressDelay = LongPressDelay;
             return clone;
         }
 
