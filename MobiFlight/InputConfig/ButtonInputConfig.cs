@@ -16,7 +16,7 @@ namespace MobiFlight.InputConfig
         private List<ConfigRefValue> LastOnPressConfigRefs;
 
         public int LongReleaseDelay = 350; //ms
-        public int LongPressDelay = 400;
+        public int LongPressDelay = 350;
         public int RepeatDelay = 0;
 
         private System.Windows.Forms.Timer LongPressTimer = new System.Windows.Forms.Timer();

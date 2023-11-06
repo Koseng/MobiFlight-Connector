@@ -237,7 +237,7 @@
             this.longPressDelayTextBox.Name = "longPressDelayTextBox";
             this.longPressDelayTextBox.Size = new System.Drawing.Size(51, 26);
             this.longPressDelayTextBox.TabIndex = 0;
-            this.longPressDelayTextBox.Text = "400";
+            this.longPressDelayTextBox.Text = "350";
             this.longPressDelayTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.longPressDelayTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox_KeyPress);
             // 
@@ -257,12 +257,13 @@
             // 
             // onLongRelActionConfigPanel
             // 
+            this.onLongRelActionConfigPanel.AutoSize = true;
             this.onLongRelActionConfigPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.onLongRelActionConfigPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.onLongRelActionConfigPanel.Location = new System.Drawing.Point(0, 112);
             this.onLongRelActionConfigPanel.MinimumSize = new System.Drawing.Size(0, 154);
             this.onLongRelActionConfigPanel.Name = "onLongRelActionConfigPanel";
-            this.onLongRelActionConfigPanel.Size = new System.Drawing.Size(592, 193);
+            this.onLongRelActionConfigPanel.Size = new System.Drawing.Size(888, 231);
             this.onLongRelActionConfigPanel.TabIndex = 5;
             // 
             // onLongReleaseActionTypePanel
@@ -337,6 +338,7 @@
             this.onLongPressSettingsPanel.ResumeLayout(false);
             this.onLongPressSettingsPanel.PerformLayout();
             this.onLongReleaseTabPage.ResumeLayout(false);
+            this.onLongReleaseTabPage.PerformLayout();
             this.onLongReleaseSettingsPanel.ResumeLayout(false);
             this.onLongReleaseSettingsPanel.PerformLayout();
             this.ResumeLayout(false);
