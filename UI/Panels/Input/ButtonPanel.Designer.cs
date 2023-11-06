@@ -224,12 +224,13 @@
             // 
             // longPressDelayLabel
             // 
-            this.longPressDelayLabel.AutoSize = true;
-            this.longPressDelayLabel.Location = new System.Drawing.Point(101, 18);
+            this.longPressDelayLabel.Location = new System.Drawing.Point(31, 18);
             this.longPressDelayLabel.Name = "longPressDelayLabel";
-            this.longPressDelayLabel.Size = new System.Drawing.Size(53, 20);
+            this.longPressDelayLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.longPressDelayLabel.Size = new System.Drawing.Size(123, 20);
             this.longPressDelayLabel.TabIndex = 1;
             this.longPressDelayLabel.Text = "Delay:";
+            this.longPressDelayLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // longPressDelayTextBox
             // 
@@ -263,7 +264,7 @@
             this.onLongRelActionConfigPanel.Location = new System.Drawing.Point(0, 112);
             this.onLongRelActionConfigPanel.MinimumSize = new System.Drawing.Size(0, 154);
             this.onLongRelActionConfigPanel.Name = "onLongRelActionConfigPanel";
-            this.onLongRelActionConfigPanel.Size = new System.Drawing.Size(888, 231);
+            this.onLongRelActionConfigPanel.Size = new System.Drawing.Size(592, 154);
             this.onLongRelActionConfigPanel.TabIndex = 5;
             // 
             // onLongReleaseActionTypePanel
@@ -309,12 +310,12 @@
             // 
             // longReleaseDelayLabel
             // 
-            this.longReleaseDelayLabel.AutoSize = true;
-            this.longReleaseDelayLabel.Location = new System.Drawing.Point(101, 18);
+            this.longReleaseDelayLabel.Location = new System.Drawing.Point(6, 18);
             this.longReleaseDelayLabel.Name = "longReleaseDelayLabel";
-            this.longReleaseDelayLabel.Size = new System.Drawing.Size(53, 20);
+            this.longReleaseDelayLabel.Size = new System.Drawing.Size(148, 23);
             this.longReleaseDelayLabel.TabIndex = 0;
             this.longReleaseDelayLabel.Text = "Delay:";
+            this.longReleaseDelayLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // ButtonPanel
             // 

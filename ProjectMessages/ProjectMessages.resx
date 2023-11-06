@@ -597,4 +597,10 @@ That midiboard cannot be used until other application is terminated and MobiFlig
   <data name="uiLabelNoAircraftDetected." xml:space="preserve">
     <value>No aircraft detected</value>
   </data>
+  <data name="uiLabelDelay" xml:space="preserve">
+    <value>Delay:</value>
+  </data>
+  <data name="uiLabelRepeatPress" xml:space="preserve">
+    <value>ms, repeat every</value>
+  </data>
 </root>

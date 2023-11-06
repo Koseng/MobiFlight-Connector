@@ -40,6 +40,11 @@ namespace MobiFlight.UI.Panels.Input
         public ButtonPanel()
         {
             InitializeComponent();
+
+            longPressDelayLabel.Text = i18n._tr("uiLabelDelay");
+            longReleaseDelayLabel.Text = i18n._tr("uiLabelDelay");
+            repeatLabel.Text = i18n._tr("uiLabelRepeatPress");
+
             ActionTypePanelsToActionNames.Add(onPressActionTypePanel, "onPress");
             ActionTypePanelsToActionNames.Add(onReleaseActionTypePanel, "onRelease");
             ActionTypePanelsToActionNames.Add(onLongReleaseActionTypePanel, "onLongRelease");

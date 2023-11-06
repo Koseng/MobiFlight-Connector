@@ -613,4 +613,12 @@ That midiboard cannot be used until other application is terminated and MobiFlig
     <value>Kein Flugzeug detektiert.</value>
     <comment>No aircraft detected</comment>
   </data>
+  <data name="uiLabelDelay" xml:space="preserve">
+    <value>Verzögerung:</value>
+    <comment>Delay:</comment>
+  </data>
+  <data name="uiLabelRepeatPress" xml:space="preserve">
+    <value>ms, erneut jede</value>
+    <comment>ms, repeat every</comment>
+  </data>
 </root>

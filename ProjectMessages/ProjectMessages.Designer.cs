@@ -376,6 +376,15 @@ namespace MobiFlight.ProjectMessages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delay:.
+        /// </summary>
+        internal static string uiLabelDelay {
+            get {
+                return ResourceManager.GetString("uiLabelDelay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Double-click row to add new config....
         /// </summary>
         internal static string uiLabelDoubleClickToAddConfig {
@@ -390,6 +399,15 @@ namespace MobiFlight.ProjectMessages {
         internal static string uiLabelNoAircraftDetected_ {
             get {
                 return ResourceManager.GetString("uiLabelNoAircraftDetected.", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ms, repeat every.
+        /// </summary>
+        internal static string uiLabelRepeatPress {
+            get {
+                return ResourceManager.GetString("uiLabelRepeatPress", resourceCulture);
             }
         }
         
