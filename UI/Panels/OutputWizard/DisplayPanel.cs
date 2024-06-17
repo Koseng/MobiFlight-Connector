@@ -300,6 +300,9 @@ namespace MobiFlight.UI.Panels.OutputWizard
                                 case DeviceType.LcdDisplay:
                                     deviceTypeOptions.Add(new ListItem() { Value = MobiFlightLcdDisplay.TYPE, Label = MobiFlightLcdDisplay.TYPE });
                                     break;
+                                case DeviceType.CustomDevice:
+                                    deviceTypeOptions.Add(new ListItem() { Value = MobiFlightCustomDevice.TYPE, Label = "Text" });
+                                    break;
                             }
                         }                        
                     }
@@ -460,9 +463,10 @@ namespace MobiFlight.UI.Panels.OutputWizard
             displayPinPanel.displayPinBrightnessPanel.Visible = false;
             displayPinPanel.displayPinBrightnessPanel.Enabled = false;
 
-            List<ListItem> outputs = new List<ListItem>();
-            List<ListItem> lcdDisplays = new List<ListItem>();
-            
+            var outputs = new List<ListItem>();
+            var lcdDisplays = new List<ListItem>();
+            var customDevices = new List<ListItem<ICustomDevice>>();
+
             foreach (var deviceType in joystick.GetConnectedOutputDeviceTypes())
             {
                 switch (deviceType)
@@ -479,16 +483,29 @@ namespace MobiFlight.UI.Panels.OutputWizard
                             lcdDisplays.Add(new ListItem() { Value = device.Name + "," + Cols + "," + Lines, Label = device.Name });
                         }                            
                         break;
+                    case DeviceType.CustomDevice:
+                        foreach (var device in joystick.GetAvailableCustomDevices())
+                        {                            
+                            customDevices.Add(new ListItem<ICustomDevice>() { Value = device as ICustomDevice, Label = device.Name });
+                        }
+                        customDevicePanel.SetCustomDeviceNames(customDevices);
+                        break;
                 }
             }
-            
-            displayPinPanel.WideStyle = true;
-            displayPinPanel.EnablePWMSelect(false);
-            displayPinPanel.SetPorts(new List<ListItem>());
-            displayPinPanel.SetPins(outputs);
 
-            displayLcdDisplayPanel.DisableOutputDefinition();
-            displayLcdDisplayPanel.SetAddresses(lcdDisplays);            
+            if (outputs.Count > 0)
+            {
+                displayPinPanel.WideStyle = true;
+                displayPinPanel.EnablePWMSelect(false);
+                displayPinPanel.SetPorts(new List<ListItem>());
+                displayPinPanel.SetPins(outputs);
+            }
+
+            if (lcdDisplays.Count > 0)
+            {
+                displayLcdDisplayPanel.DisableOutputDefinition();
+                displayLcdDisplayPanel.SetAddresses(lcdDisplays);
+            }
 
             return true;
         }
@@ -590,7 +607,7 @@ namespace MobiFlight.UI.Panels.OutputWizard
             List<ListItem> stepper = new List<ListItem>();
             List<ListItem> lcdDisplays = new List<ListItem>();
             List<ListItem> shiftRegisters = new List<ListItem>();
-            List<ListItem<MobiFlightCustomDevice>> customDevices = new List<ListItem<MobiFlightCustomDevice>>();
+            List<ListItem<ICustomDevice>> customDevices = new List<ListItem<ICustomDevice>>();
 
 
             if (module!=null)
@@ -626,7 +643,7 @@ namespace MobiFlight.UI.Panels.OutputWizard
                             break;
 
                         case DeviceType.CustomDevice:
-                            customDevices.Add(new ListItem<MobiFlightCustomDevice>()
+                            customDevices.Add(new ListItem<ICustomDevice>()
                             {
                                 Value = device as MobiFlightCustomDevice,
                                 Label = device.Name

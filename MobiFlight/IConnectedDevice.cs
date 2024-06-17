@@ -10,6 +10,8 @@ namespace MobiFlight
         String Name { get; }
         DeviceType Type { get; }
 
+        //String Label { get; }
+
         void Stop();
     }
 }

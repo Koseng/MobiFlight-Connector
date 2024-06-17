@@ -268,6 +268,11 @@ namespace MobiFlight
             return new List<IBaseDevice>();
         }
 
+        public virtual List<ICustomDevice> GetAvailableCustomDevices()
+        {
+            return new List<ICustomDevice>();
+        }
+
         public virtual void Update()
         {           
             if (DIJoystick == null) return;
@@ -445,11 +450,26 @@ namespace MobiFlight
             // Do nothing in base class
         }
 
+        public virtual void SetCustomDevice(string deviceName, int messageType, string value)
+        {
+            // Do nothing in base class
+        }
+
 
         public virtual IEnumerable<DeviceType> GetConnectedOutputDeviceTypes()
         {
             List<DeviceType> result = new List<DeviceType>();
-            result.Add(DeviceType.Output);
+
+            if (GetAvailableOutputDevicesAsListItems().ToList().Find(x => x.Value is JoystickOutputDevice) != null)
+            {
+                result.Add(DeviceType.Output);
+            }
+
+            if (GetAvailableOutputDevicesAsListItems().ToList().Find(x => x.Value is JoystickStringOutputDevice) != null)
+            {
+                result.Add(DeviceType.CustomDevice);
+            }
+                       
             return result;
         }
 

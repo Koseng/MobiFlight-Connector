@@ -748,6 +748,10 @@ namespace MobiFlight
                             // do nothing
                             break;
 
+                        case OutputConfig.CustomDevice.Type:                           
+                            joystick.SetCustomDevice(cfg.CustomDevice.CustomName, cfg.CustomDevice.MessageType, value);
+                            break;
+
                         default: // LED Output                          
                             byte state = 0;
                             if (value != "0") state = 1;

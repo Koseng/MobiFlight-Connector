@@ -5,6 +5,7 @@ using MobiFlight.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace MobiFlight.Joysticks.WinwingFcu
@@ -42,7 +43,8 @@ namespace MobiFlight.Joysticks.WinwingFcu
         private HidBuffer HidDataBuffer = new HidBuffer();
         private WinwingDisplayControl DisplayControl = new WinwingDisplayControl();
         
-        private List<IBaseDevice> LcdDevices = new List<IBaseDevice>();        
+        private List<IBaseDevice> LcdDevices = new List<IBaseDevice>();
+        private List<ICustomDevice> CustomDevices = new List<ICustomDevice>();
         private List<ListItem<IBaseDevice>> LedDevices = new List<ListItem<IBaseDevice>>();
        
   
@@ -58,6 +60,7 @@ namespace MobiFlight.Joysticks.WinwingFcu
             foreach (string displayName in displayNames) 
             {
                 LcdDevices.Add(new LcdDisplay() { Name = displayName }); // Col and Lines values don't matter   
+                CustomDevices.Add(new JoystickStringOutputDevice() { Name = displayName });                
             }
             foreach (string ledName in ledNames)
             {
@@ -92,7 +95,7 @@ namespace MobiFlight.Joysticks.WinwingFcu
                     HidDataBuffer.HidReport = await Device.ReadReportAsync().ConfigureAwait(false);                                                                
                     InputReportReceived(HidDataBuffer);                                     
                 }
-            });
+            });           
         }
 
 
@@ -221,13 +224,19 @@ namespace MobiFlight.Joysticks.WinwingFcu
 
         public override IEnumerable<DeviceType> GetConnectedOutputDeviceTypes()
         {     
-            return new List<DeviceType>() { DeviceType.Output, DeviceType.LcdDisplay };
+            return new List<DeviceType>() { DeviceType.Output, DeviceType.LcdDisplay, DeviceType.CustomDevice };
         }
 
         public override void SetLcdDisplay(string address, string value)
         {
             // Check for value change is done inside the library
             DisplayControl.SetDisplay(address, value);
+        }
+
+        public override void SetCustomDevice(string deviceName, int messageType, string value)
+        {
+            // Check for value change is done inside the library
+            DisplayControl.SetDisplay(deviceName, value);
         }
 
         public override void SetOutputDeviceState(string name, byte state)
@@ -239,6 +248,11 @@ namespace MobiFlight.Joysticks.WinwingFcu
         public override List<IBaseDevice> GetAvailableLcdDevices()
         {
             return LcdDevices;
+        }
+
+        public override List<ICustomDevice> GetAvailableCustomDevices()
+        {
+            return CustomDevices;
         }
 
         public override List<ListItem<IBaseDevice>> GetAvailableOutputDevicesAsListItems()
