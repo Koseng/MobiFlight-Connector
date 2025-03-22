@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using WebSocketSharp.Server;
 
 namespace MobiFlight
 {
@@ -36,6 +37,9 @@ namespace MobiFlight
         private readonly System.Collections.Concurrent.ConcurrentDictionary<string, Joystick> Joysticks = new System.Collections.Concurrent.ConcurrentDictionary<string, Joystick>();
         private readonly List<Joystick> ExcludedJoysticks = new List<Joystick>();
         private IntPtr Handle;
+
+        // Websocket Server on port 8320, not yet started
+        WebSocketServer WSServer = new WebSocketServer(System.Net.IPAddress.Loopback, 8320);
 
         public JoystickManager()
         {
@@ -118,6 +122,10 @@ namespace MobiFlight
             }
             Joysticks.Clear();
             ExcludedJoysticks.Clear();
+            if (WSServer.IsListening)
+            {
+                WSServer.Stop();
+            }
         }
 
         public void Stop()
@@ -179,7 +187,7 @@ namespace MobiFlight
                 else if (vendorId == 0x4098 && (productId == 0xBB10 || productId == 0xBC1D || productId == 0xBC1E || productId == 0xBA01))
                 {
                     var joystickDef = GetDefinitionByProductId(vendorId, productId);
-                    js = new WinwingFcu(diJoystick, joystickDef, productId);
+                    js = new WinwingFcu(diJoystick, joystickDef, productId, WSServer);
                 }
                 else if (vendorId == 0x231D)
                 {
