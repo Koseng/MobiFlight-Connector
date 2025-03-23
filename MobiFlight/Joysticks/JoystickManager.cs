@@ -13,7 +13,7 @@ using WebSocketSharp.Server;
 
 namespace MobiFlight
 {
-    public class JoystickManager
+    public class JoystickManager : IJoystickManager
     {
         // Set to true if any errors occurred when loading the definition files.
         // Used as part of the unit test automation to determine if the checked-in
@@ -33,7 +33,7 @@ namespace MobiFlight
         private List<JoystickDefinition> Definitions = new List<JoystickDefinition>();
         public event EventHandler Connected;
         public event ButtonEventHandler OnButtonPressed;
-        private readonly Timer PollTimer = new Timer(); 
+        private readonly Timer PollTimer = new Timer();
         private readonly System.Collections.Concurrent.ConcurrentDictionary<string, Joystick> Joysticks = new System.Collections.Concurrent.ConcurrentDictionary<string, Joystick>();
         private readonly List<Joystick> ExcludedJoysticks = new List<Joystick>();
         private IntPtr Handle;
@@ -72,7 +72,7 @@ namespace MobiFlight
         /// <summary>
         /// Loads all joystick definitions from disk.
         /// </summary>
-        public void LoadDefinitions()
+        private void LoadDefinitions()
         {
             Definitions = JsonBackedObject.LoadDefinitions<JoystickDefinition>(Directory.GetFiles("Joysticks", "*.joystick.json"), "Joysticks/mfjoystick.schema.json",
                 onSuccess: (joystick, definitionFile) => Log.Instance.log($"Loaded joystick definition for {joystick.InstanceName}", LogSeverity.Info),
@@ -183,7 +183,7 @@ namespace MobiFlight
                 {
                     // statically set this to Octavi until we might support (Octavi|IFR1) or similar
                     js = new Octavi(diJoystick, GetDefinitionByInstanceName("Octavi"));
-                }     
+                }
                 else if (vendorId == 0x4098 && WinwingConstants.FCU_PRODUCTIDS.Contains(productId))
                 {
                     var joystickDef = GetDefinitionByProductId(vendorId, productId);

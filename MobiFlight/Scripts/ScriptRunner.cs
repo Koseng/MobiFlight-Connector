@@ -1,5 +1,5 @@
-﻿using MobiFlight.Joysticks.Winwing;
-using MobiFlight.SimConnectMSFS;
+﻿using MobiFlight.Base;
+using MobiFlight.Joysticks.Winwing;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -12,8 +12,8 @@ namespace MobiFlight.Scripts
 {
     internal class ScriptRunner
     {
-        private JoystickManager JsManager;
-        private SimConnectCache MsfsCache;
+        private IJoystickManager JsManager;
+        private CacheInterface MsfsSimConnectCache;
         private string AircraftName = string.Empty;
         private string AircraftPath = string.Empty;
 
@@ -36,10 +36,10 @@ namespace MobiFlight.Scripts
         };
 
 
-        public ScriptRunner(JoystickManager joystickManager, SimConnectCache msfsCache, IChildProcessMonitor childProcMon)
+        public ScriptRunner(IJoystickManager joystickManager, CacheInterface msfsSimConnectCache, IChildProcessMonitor childProcMon)
         {
             JsManager = joystickManager;
-            MsfsCache = msfsCache;  
+            MsfsSimConnectCache = msfsSimConnectCache;  
             ChildProcMon = childProcMon;
             ReadConfiguration();
             GetAvailableScripts();          
@@ -119,7 +119,7 @@ namespace MobiFlight.Scripts
         public void OnSimAircraftChanged(object sender, string aircraftName)
         {
             AircraftName = aircraftName.ToLower();
-            if (!MsfsCache.IsConnected())
+            if (!MsfsSimConnectCache.IsConnected())
             {
                 CheckForRestart();
             }
@@ -130,7 +130,7 @@ namespace MobiFlight.Scripts
         {
             AircraftPath = aircraftPath.ToLower();
 
-            if (MsfsCache.IsConnected())
+            if (MsfsSimConnectCache.IsConnected())
             {
                 CheckForRestart();
             }            
@@ -353,7 +353,7 @@ namespace MobiFlight.Scripts
 
         private void CheckAndExecuteScripts()
         {
-            string aircraftDescription = MsfsCache.IsConnected() ? AircraftPath : AircraftName;
+            string aircraftDescription = MsfsSimConnectCache.IsConnected() ? AircraftPath : AircraftName;
             ExecutionList.Clear();
             Log.Instance.log($"ScriptRunner - Current aircraft description: {aircraftDescription}.", LogSeverity.Debug);
 

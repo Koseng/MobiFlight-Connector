@@ -323,6 +323,7 @@
     <Compile Include="MobiFlight\InputConfig\MSFS2020CustomInputAction.cs" />
     <Compile Include="MobiFlight\InputConfig\XplaneInputAction.cs" />
     <Compile Include="MobiFlight\InputConfig\VariableInputAction.cs" />
+    <Compile Include="MobiFlight\Joysticks\IJoystickManager.cs" />
     <Compile Include="MobiFlight\Joysticks\Joystick.cs" />
     <Compile Include="MobiFlight\Joysticks\JoystickDevice.cs" />
     <Compile Include="MobiFlight\Joysticks\JoystickDeviceType.cs" />
@@ -384,6 +385,7 @@
     <Compile Include="MobiFlight\OutputConfig\SimConnectValue.cs" />
     <Compile Include="HubHop\Msfs2020HubhopPresetList.cs" />
     <Compile Include="MobiFlight\PortDetails.cs" />
+    <Compile Include="MobiFlight\Scripts\ProcessExecutor.cs" />
     <Compile Include="MobiFlight\ThreadSafeWebView2.cs">
       <SubType>Component</SubType>
     </Compile>
