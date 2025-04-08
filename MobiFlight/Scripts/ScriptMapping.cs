@@ -6,5 +6,6 @@
         public string[] ProductIds { get; set; }
         public string AircraftIdSnippet { get; set; }
         public string ScriptName { get; set; }
+        public string[] SettingArguments { get; set; }
     }
 }

@@ -20,7 +20,7 @@ namespace MobiFlight.Scripts
         private Dictionary<string, List<ScriptMapping>> MappingDictionary = new Dictionary<string, List<ScriptMapping>>();
         private Dictionary<string, string> ScriptDictionary = new Dictionary<string, string>();
 
-        private List<string> ExecutionList = new List<string>();
+        private Dictionary<string, ScriptMapping> ExecutionList = new Dictionary<string, ScriptMapping>();
         private List<Process> ActiveProcesses = new List<Process>();
 
         private IChildProcessMonitor ChildProcMon;
@@ -303,10 +303,12 @@ namespace MobiFlight.Scripts
 
             foreach (var script in ExecutionList)
             {
+                // TODO get all SettingArguments and add them to Arguments
+
                 ProcessStartInfo psi = new ProcessStartInfo
                 {                                       
                     FileName = @"python",                    
-                    Arguments = ($"\"{ScriptDictionary[script]}\""),
+                    Arguments = ($"\"{ScriptDictionary[script.Key]}\""),
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -373,10 +375,10 @@ namespace MobiFlight.Scripts
                             if (aircraftDescription.Contains(config.AircraftIdSnippet))
                             {
                                 // Only add if not already there
-                                if (!ExecutionList.Contains(config.ScriptName))
+                                if (!ExecutionList.ContainsKey(config.ScriptName))
                                 {
                                     Log.Instance.log($"ScriptRunner - Add {config.ScriptName} to execution list.", LogSeverity.Info);
-                                    ExecutionList.Add(config.ScriptName);
+                                    ExecutionList.Add(config.ScriptName, config);
                                 }
                             }
                         }
