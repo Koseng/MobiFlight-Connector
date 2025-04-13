@@ -4,6 +4,6 @@ namespace MobiFlight.Scripts
 {
     internal interface IChildProcessMonitor
     {
-        void AddChildProcess(Process process);
+        void AddChildProcess(IProcess process);
     }
 }

@@ -145,7 +145,7 @@ namespace MobiFlight
             mobiFlightCache.LookupFinished += new EventHandler(mobiFlightCache_LookupFinished);
 
             // ChildProcessMonitor necessary, that in case of MobiFlight crash, all child processes are terminated
-            scriptRunner = new ScriptRunner(joystickManager, simConnectCache, new ChildProcessMonitor());
+            scriptRunner = new ScriptRunner(joystickManager, simConnectCache);
             OnSimAircraftChanged += scriptRunner.OnSimAircraftChanged;
             OnSimAircraftPathChanged += scriptRunner.OnSimAircraftPathChanged;
 

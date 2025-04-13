@@ -10,8 +10,8 @@ namespace MobiFlight.Scripts
     {
         private readonly IntPtr JobObjectHandle;
 
-        public void AddChildProcess(Process process)
-        {
+        public void AddChildProcess(IProcess process)
+        {     
             if (JobObjectHandle != IntPtr.Zero)
             {
                 bool success = AssignProcessToJobObject(JobObjectHandle, process.Handle);

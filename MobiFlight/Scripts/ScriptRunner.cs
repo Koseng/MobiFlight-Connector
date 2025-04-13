@@ -21,9 +21,7 @@ namespace MobiFlight.Scripts
         private Dictionary<string, string> ScriptDictionary = new Dictionary<string, string>();
 
         private List<string> ExecutionList = new List<string>();
-        private List<Process> ActiveProcesses = new List<Process>();
-
-        private IChildProcessMonitor ChildProcMon;
+        private List<IProcess> ActiveProcesses = new List<IProcess>();
 
         private bool IsInPlayMode = false;
         private bool PythonCheckCompleted = false;
@@ -35,16 +33,21 @@ namespace MobiFlight.Scripts
             { "SimConnect", new Tuple<int, int>(0,4) },
         };
 
+        // Change for unit tests
+        public IProcessFactory ProcessFactory { get; set; }
+        public IChildProcessMonitor ChildProcMon { get; set; }     
+        public IExternalFacade ExternalFacade { get; set; }
 
-        public ScriptRunner(IJoystickManager joystickManager, CacheInterface msfsSimConnectCache, IChildProcessMonitor childProcMon)
+        public ScriptRunner(IJoystickManager joystickManager, CacheInterface msfsSimConnectCache)
         {
+            ProcessFactory = new ProcessFactory();
+            ChildProcMon = new ChildProcessMonitor();
+            ExternalFacade = new ExternalFacade();
             JsManager = joystickManager;
-            MsfsSimConnectCache = msfsSimConnectCache;  
-            ChildProcMon = childProcMon;
+            MsfsSimConnectCache = msfsSimConnectCache;             
             ReadConfiguration();
             GetAvailableScripts();          
         }
-
 
         private string[] SubstituteKeywords(string[] productIds)
         {
@@ -68,7 +71,7 @@ namespace MobiFlight.Scripts
 
         private void ReadConfiguration()
         {
-            string json = File.ReadAllText(@"Scripts\ScriptMappings.json");
+            string json = ExternalFacade.ReadTextFromFile(@"Scripts\ScriptMappings.json");            
             ScriptMappings definitions = JsonConvert.DeserializeObject<ScriptMappings>(json);
 
             foreach (var mapping in definitions.Mappings)
@@ -95,8 +98,8 @@ namespace MobiFlight.Scripts
 
         private void GetAvailableScripts()
         {
-            var filesFullPath = Directory.GetFiles(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Scripts"), "*.py", SearchOption.AllDirectories);           
-
+            var filesFullPath = ExternalFacade.GetFilesInSubDirectory("Scripts", "*.py", SearchOption.AllDirectories);
+         
             foreach (var fullPath in filesFullPath)
             {
                 string fileName = Path.GetFileName(fullPath);
@@ -149,15 +152,16 @@ namespace MobiFlight.Scripts
                 CreateNoWindow = true
             };
 
-            using (Process process = Process.Start(start))
+            using (IProcess process = ProcessFactory.CreateProcess(start))
             {
+                process.Start();
                 using (StreamReader reader = process.StandardOutput)
                 {
                     string output = reader.ReadToEnd();
                     var x = output.Split(' ');
                     var v = x[1].Split('.');
-                    Log.Instance.log($"Python version: {x[1]}.", LogSeverity.Info); 
-                    if ( (int.Parse(v[0]) >= 3) && (int.Parse(v[1]) >= 10))
+                    Log.Instance.log($"Python version: {x[1]}.", LogSeverity.Info);
+                    if ((int.Parse(v[0]) >= 3) && (int.Parse(v[1]) >= 10))
                     {
                         return true;
                     }
@@ -171,7 +175,7 @@ namespace MobiFlight.Scripts
 
         private bool IsPythonPathSet()
         {
-            string pathVariable = Environment.GetEnvironmentVariable("PATH").ToLower();
+            string pathVariable = ExternalFacade.GetEnvironmentVariable("PATH").ToLower();
             if (pathVariable.Contains("python"))
             {
                 Log.Instance.log($"ScriptRunner - Python Path is set.", LogSeverity.Debug);
@@ -198,8 +202,9 @@ namespace MobiFlight.Scripts
                 CreateNoWindow = true
             };
 
-            using (Process process = Process.Start(start))
+            using (IProcess process = ProcessFactory.CreateProcess(start))
             {
+                process.Start();
                 using (StreamReader reader = process.StandardOutput)
                 {
                     string result = reader.ReadToEnd();
@@ -254,12 +259,15 @@ namespace MobiFlight.Scripts
         private void ShowPythonInstructionsMessageBox()
         {
             Log.Instance.log($"ShowPythonInstructionsMessageBox", LogSeverity.Debug);
-            if (MessageBox.Show(i18n._tr("uiMessagePythonInstructions"),
-                    i18n._tr("uiMessagePythonHint"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning) == DialogResult.OK) ;
+
+            DialogResult res = ExternalFacade.ShowMessageBox(i18n._tr("uiMessagePythonInstructions"),
+                                                             i18n._tr("uiMessagePythonHint"),
+                                                             MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (res == DialogResult.OK)
             {
-                Process.Start("https://github.com/MobiFlight/MobiFlight-Connector/wiki/Installing-Python");
+                IProcess process = ProcessFactory.CreateProcess("https://github.com/MobiFlight/MobiFlight-Connector/wiki/Installing-Python");
+                process.Start();
+                //Process.Start("https://github.com/MobiFlight/MobiFlight-Connector/wiki/Installing-Python");
             }
         }
 
@@ -313,10 +321,7 @@ namespace MobiFlight.Scripts
                     RedirectStandardError = true,
                 };
 
-                Process process = new Process
-                {
-                    StartInfo = psi
-                };
+                IProcess process = ProcessFactory.CreateProcess(psi);
 
                 process.OutputDataReceived += Process_OutputDataReceived;
                 process.ErrorDataReceived += Process_ErrorDataReceived;
