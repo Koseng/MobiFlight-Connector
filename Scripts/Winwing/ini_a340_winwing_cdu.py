@@ -10,7 +10,7 @@ CAPTAIN_MCDU_URL = "ws://localhost:8320/winwing/cdu-captain"
 FO_MCDU_URL = "ws://localhost:8320/winwing/cdu-co-pilot"
 MCDU_FLAG_SMALL_FONT = 0x01
 
-MCDUColor_Map = {0:"w",1:"c",2:"a",3:"g",4:"e",5:"r",6:"y",7:"m"}
+MCDU_COLOR_MAP = {0:"w",1:"c",2:"a",3:"g",4:"e",5:"r",6:"y",7:"m"}
 special_chars = {'a':'←','b':'→','e':'↑','f':'↓','o':'☐','d':'°','c':'Δ'}
 
 MCDU_COLUMNS, MCDU_ROWS = 24, 14
@@ -29,22 +29,24 @@ A340_MCDU_CPT_DEFINITION, A340_MCDU_FO_DEFINITION = 0, 1
 # --- SimConnect Wrapper ---
 class SimConnectMobiFlight(SimConnect):
     def __init__(self, auto_connect=True, library_path=None):
-        self.handlers = []
+        self.client_data_handlers = []
         super().__init__(auto_connect, library_path) if library_path else super().__init__(auto_connect)
         self.dll.MapClientDataNameToID.argtypes = [wintypes.HANDLE, ctypes.c_char_p, SIMCONNECT_CLIENT_DATA_ID]
 
-    def register_handler(self, h): 
-        if h not in self.handlers: self.handlers.append(h)
+    def register_client_data_handler(self, h): 
+        if h not in self.client_data_handlers: self.client_data_handlers.append(h)
 
-    def unregister_handler(self, h): 
-        if h in self.handlers: self.handlers.remove(h)
+    def unregister_client_data_handler(self, h): 
+        if h in self.client_data_handlers: self.client_data_handlers.remove(h)
 
-    def my_dispatch_proc(self, pData=None, *_):
+    def my_dispatch_proc(self, pData, cbData, pContext):
         if not pData: return
         if pData.contents.dwID == SIMCONNECT_RECV_ID.SIMCONNECT_RECV_ID_CLIENT_DATA:
-            data = ctypes.cast(pData, ctypes.POINTER(SIMCONNECT_RECV_CLIENT_DATA)).contents
-            for h in self.handlers: h(data)
-        else: super().my_dispatch_proc(pData, *_)
+            client_data = ctypes.cast(pData, ctypes.POINTER(SIMCONNECT_RECV_CLIENT_DATA)).contents
+            for handler in self.client_data_handlers:
+                handler(client_data)
+        else:
+            super().my_dispatch_proc(pData, cbData, pContext)
 
 # --- MobiFlight WebSocket Client ---
 class MobiFlightClient:
@@ -66,17 +68,18 @@ class MobiFlightClient:
                 self._was_connected, self.retries = True, 0
                 async for _ in self.websocket: pass
             except Exception as e:
-                self.retries += 1;               
+                self.retries += 1               
                 logging.info(f"WebSocket failure: {e} ({self.retries}/{self.max_retries})")
                 self.websocket = None
                 self.connected.clear()
             await asyncio.sleep(5)     
         logging.info("Max retries reached. Giving up connecting to MobiFlight at %s. If you only have one CDU attached, you can ignore this message.", self.uri)
-        self.connected.set(); 
+        self.connected.set()
         
     async def send(self, data:str):
         if self.websocket and self.connected.is_set():
-            await self.websocket.send(data); self.last_data = data
+            await self.websocket.send(data)
+            self.last_data = data
             
     async def close(self):
         if self.websocket: 
@@ -95,28 +98,36 @@ def create_mobi_json(data:bytes)->str:
             sym, col, flg = chr(data[idx]), data[idx+1], data[idx+2]
             if sym in (" ","\0"): continue
             sym = special_chars.get(sym, sym)
-            out["Data"][i] = [sym, MCDUColor_Map.get(col,"w"), int(bool(flg&MCDU_FLAG_SMALL_FONT))]
-        except: pass
+            out["Data"][i] = [sym, MCDU_COLOR_MAP.get(col,"w"), int(bool(flg&MCDU_FLAG_SMALL_FONT))]
+        except Exception as e:  
+            logging.error(f"Error processing character at index {i}: {e}")
     return json.dumps(out)
 
 # --- MCDU Client ---
 class A340MCDUClient:
-    def __init__(self, sc:SimConnectMobiFlight, uri:str, def_id:int, CLIENT_AREA_NAME:str, CLIENT_AREA_ID:int):
-        self.sc, self.uri, self.def_id, self.CA_NAME, self.CA_ID = sc, uri, def_id, CLIENT_AREA_NAME, CLIENT_AREA_ID
+    def __init__(self, sc:SimConnectMobiFlight, uri:str, def_id:int, client_area_name:str, client_area_id:int):
+        self.sc = sc
+        self.uri = uri
+        self.def_id = def_id
+        self.CA_NAME = client_area_name
+        self.CA_ID = client_area_id
         self.mobiflight, self.last_data, self.loop = MobiFlightClient(uri), None, None
         logging.info(f"Connecting to {self.uri}")
 
     def setup(self):
         try:
-            sc = self.sc; h = sc.hSimConnect
+            sc = self.sc
+            h = sc.hSimConnect
             sc.dll.MapClientDataNameToID(h, self.CA_NAME.encode(), self.CA_ID)
             sc.dll.AddToClientDataDefinition(h, self.def_id, 0, MCDU_DATA_SIZE, 0, 0)
             sc.dll.RequestClientData(h, self.CA_ID, self.def_id, self.def_id,
                 Enum.SIMCONNECT_CLIENT_DATA_PERIOD.SIMCONNECT_CLIENT_DATA_PERIOD_VISUAL_FRAME,
                 Enum.SIMCONNECT_CLIENT_DATA_REQUEST_FLAG.SIMCONNECT_CLIENT_DATA_REQUEST_FLAG_CHANGED,0,0,0)
-            sc.register_handler(self.on_data)
+            sc.register_client_data_handler(self.on_data)
             return True
-        except Exception as e: logging.error(f"SimConnect setup failed: {e}"); return False
+        except Exception as e: 
+            logging.error(f"SimConnect setup failed: {e}")
+            return False
 
     def on_data(self, d:Any):
         if d.dwDefineID!=self.def_id or not hasattr(d,"dwData"): return
@@ -128,12 +139,6 @@ class A340MCDUClient:
         json_data=create_mobi_json(data)
         asyncio.run_coroutine_threadsafe(self.mobiflight.send(json_data), self.loop)
 
-    async def process_sc(self):
-        while True: 
-            try: self.sc.my_dispatch_proc()
-            except: pass
-            await asyncio.sleep(0.1)
-
     async def run(self):
         try:
             self.loop=asyncio.get_running_loop()
@@ -141,7 +146,7 @@ class A340MCDUClient:
             await self.mobiflight.connected.wait()
             if self.mobiflight.retries>=self.mobiflight.max_retries: return
             if not self.setup(): return
-            await asyncio.gather(task_ws, self.process_sc())
+            await asyncio.gather(task_ws)
         finally:
             await self.mobiflight.close()
             
@@ -150,13 +155,13 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     sc=SimConnectMobiFlight()
 
-    mcdu_CPT=A340MCDUClient(sc, CAPTAIN_MCDU_URL, A340_MCDU_CPT_DEFINITION, A340_MCDU_CPT_NAME, A340_CPT_MCDU_CLIENT_DATA_ID)
-    mcdu_FO=A340MCDUClient(sc, FO_MCDU_URL, A340_MCDU_FO_DEFINITION, A340_MCDU_FO_NAME, A340_FO_MCDU_CLIENT_DATA_ID)
+    mcdu_cpt=A340MCDUClient(sc, CAPTAIN_MCDU_URL, A340_MCDU_CPT_DEFINITION, A340_MCDU_CPT_NAME, A340_CPT_MCDU_CLIENT_DATA_ID)
+    mcdu_fo=A340MCDUClient(sc, FO_MCDU_URL, A340_MCDU_FO_DEFINITION, A340_MCDU_FO_NAME, A340_FO_MCDU_CLIENT_DATA_ID)
 
     async def main(): 
         await asyncio.gather(
-            mcdu_CPT.run(),
-            mcdu_FO.run()
+            mcdu_cpt.run(),
+            mcdu_fo.run()
         )
     try: asyncio.run(main())
     except KeyboardInterrupt: pass
