@@ -8,10 +8,10 @@ namespace MobiFlight.Joysticks.Winwing
 {
     internal class WinwingEcam : Joystick
     {
-        private WinwingDisplayControl DisplayControl;
+        private readonly WinwingDisplayControl DisplayControl;
 
-        private List<IBaseDevice> LcdDevices = new List<IBaseDevice>();
-        private List<ListItem<IBaseDevice>> LedDevices = new List<ListItem<IBaseDevice>>();
+        private readonly List<IBaseDevice> LcdDevices = new List<IBaseDevice>();
+        private readonly List<ListItem<IBaseDevice>> LedDevices = new List<ListItem<IBaseDevice>>();
 
         public WinwingEcam(SharpDX.DirectInput.Joystick joystick, JoystickDefinition def, int productId, WebSocketServer server) : base(joystick, def)
         {
