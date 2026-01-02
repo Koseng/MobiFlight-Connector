@@ -163,26 +163,39 @@ def parse_fsl_mcdu(value_list):
     return json.dumps(message, separators=(',', ':'))
 
 
+
+# Wrapper to run all tasks for a CDU and cancel fetch/process if websocket exits
+async def run_cdu_tasks(mcdu, cdu):
+    fetch_task = asyncio.create_task(fetch_fsl_mcdu(mcdu))
+    process_task = asyncio.create_task(run_fsl_http_client(mcdu, cdu))
+    ws_task = asyncio.create_task(run_mobiflight_websocket_client(cdu))
+
+    done, pending = await asyncio.wait([ws_task], return_when=asyncio.FIRST_COMPLETED)
+
+    # If ws_task is done (returns early), cancel the others
+    if ws_task in done:
+        fetch_task.cancel()
+        process_task.cancel()
+        try:
+            await fetch_task
+        except asyncio.CancelledError:
+            pass
+        try:
+            await process_task
+        except asyncio.CancelledError:
+            pass
+
+
 async def main():
-    setup_logging(logging.WARNING, os.path.join(os.getcwd(), "logs/fslMcduLogging.log"))
-    logging.info("---- STARTED FSLWinwingCduCaptain.py ----")
+    setup_logging(logging.INFO, os.path.join(os.getcwd(), "logs/fslMcduLogging.log"))
+    logging.info("----- STARTED FSLWinwingCdu.py (FSLabs MCDU Bridge) ----")
 
-    capt_fetch_task = asyncio.create_task(fetch_fsl_mcdu("3CA1"))
-    fo_fetch_task = asyncio.create_task(fetch_fsl_mcdu("3CA2"))
-
-    capt_process_task = asyncio.create_task(run_fsl_http_client("3CA1", "captain"))
-    fo_process_task = asyncio.create_task(run_fsl_http_client("3CA2", "co-pilot"))
-
-    capt_ws_task = asyncio.create_task(run_mobiflight_websocket_client("captain"))
-    fo_ws_task = asyncio.create_task(run_mobiflight_websocket_client("co-pilot"))
+    capt_cdu_task = asyncio.create_task(run_cdu_tasks("3CA1", "captain"))
+    fo_cdu_task = asyncio.create_task(run_cdu_tasks("3CA2", "co-pilot"))
 
     await asyncio.gather(
-        capt_fetch_task,
-        capt_process_task,
-        capt_ws_task,
-        fo_fetch_task,
-        fo_process_task,
-        fo_ws_task,
+        capt_cdu_task,
+        fo_cdu_task,
     )
 
 
@@ -191,7 +204,7 @@ def setup_logging(log_level, log_file_full_path):
 
     log_formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
+    root_logger.setLevel(log_level)
 
     file_handler = logging.handlers.RotatingFileHandler(
         log_file_full_path, maxBytes=500000, backupCount=7
