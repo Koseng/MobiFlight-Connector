@@ -330,7 +330,7 @@ namespace MobiFlight.Scripts
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
-                Log.Instance.log($"ScriptRunner - Error: {e.Data}", LogSeverity.Info);
+                Log.Instance.log($"ScriptRunner - Output: {e.Data}", LogSeverity.Info);
             }
         }
 
