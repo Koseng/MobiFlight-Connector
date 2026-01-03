@@ -39,7 +39,7 @@ namespace MobiFlight.Scripts
         private CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 
         private IChildProcessMonitor ChildProcMon;
-        private PythonEnvironmentValidator PythonValidator;
+        private readonly PythonEnvironmentValidator PythonValidator;
 
         private volatile bool IsInPlayMode = false;
         private volatile bool PythonCheckCompleted = false;
@@ -83,7 +83,7 @@ namespace MobiFlight.Scripts
             {
                 int vId = Convert.ToInt32(vendorId, 16);
                 int pId = Convert.ToInt32(productId, 16);
-                return vId.ToString() + pId.ToString();
+                return $"{vId}{pId}";
             }
             catch (FormatException ex)
             {

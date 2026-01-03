@@ -16,7 +16,7 @@ namespace MobiFlight.Scripts
         private const string PIP_FREEZE_ARG = "-m pip freeze";
         private static readonly Version MINIMUM_PYTHON_VERSION = new Version(3, 11, 0);
 
-        private Dictionary<string, Version> RequiredPackages;
+        private readonly Dictionary<string, Version> RequiredPackages;
 
         public PythonEnvironmentValidator(Dictionary<string, Version> requiredPackages)
         {
@@ -95,7 +95,7 @@ namespace MobiFlight.Scripts
                 }
                 else
                 {
-                    Log.Instance.log("PythonEnvironmentValidator - Python Path not set.", LogSeverity.Info);
+                    Log.Instance.log("PythonEnvironmentValidator - Python Path not set.", LogSeverity.Error);
                     return false;
                 }
             }
@@ -108,6 +108,8 @@ namespace MobiFlight.Scripts
 
         public bool IsPythonMicrosoftStoreInstalled()
         {
+            // *python.3* is used to match any Python 3 version installed from the Microsoft Store.
+            // *python* is not used any more, since that gives a false positive on the PythonManager app.
             string powerShellCommand = "Get-AppxPackage -Name '*python.3*' | Select-Object Name";
 
             ProcessStartInfo start = new ProcessStartInfo
@@ -210,7 +212,7 @@ namespace MobiFlight.Scripts
             }
             catch (Win32Exception ex)
             {
-                Log.Instance.log($"PythonEnvironmentValidator - python executable not found: {ex.Message}", LogSeverity.Error);
+                Log.Instance.log($"PythonEnvironmentValidator - Python executable not found: {ex.Message}", LogSeverity.Error);
                 return false;
             }
             catch (Exception ex)
