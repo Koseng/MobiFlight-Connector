@@ -405,7 +405,6 @@ namespace MobiFlight.Scripts
             Log.Instance.log($"ScriptRunner - Start().", LogSeverity.Debug);
             IsInPlayMode = true;
             string currentAircraftDescription = MsfsCache.IsConnected() ? AircraftPath : AircraftName;
-            currentAircraftDescription = "__fnx_3__";
             NewAircraftRequestQueue.Enqueue(currentAircraftDescription);
             Task myTask = Task.Run(async () => { await ProcessAircraftRequests(CancellationTokenSource.Token); });
         }
