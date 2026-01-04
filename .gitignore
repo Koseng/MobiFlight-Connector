@@ -487,6 +487,6 @@ FodyWeavers.xsd
 /wwwroot
 *.exe
 
-# Override: Force-include everything in Python directory
-!Python/
-!Python/**
+# Python directory - include only RuntimeAndPackages*.zip files
+Python/*
+!Python/RuntimeAndPackages*.zip
