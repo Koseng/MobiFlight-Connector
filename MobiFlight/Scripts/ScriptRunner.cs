@@ -14,7 +14,7 @@ namespace MobiFlight.Scripts
 {
     internal class ScriptRunner
     {
-        private const string PYTHON_EXECUTABLE = @"Python\3.14.2\python.exe";
+        private string PythonExecutable;
         private const string WINWING_CDUS_KEYWORD = "WinwingCDUs";
         private const string CONFIG_FILE_PATH = @"Scripts\ScriptMappings.json";
         private const string SCRIPTS_DIRECTORY = "Scripts";
@@ -44,6 +44,11 @@ namespace MobiFlight.Scripts
 
         public ScriptRunner(JoystickManager joystickManager, SimConnectCacheInterface msfsCache)
         {
+            // Get Python paths from settings                     
+            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Properties.Settings.Default.PythonBaseFolder);
+            string pythonPath = Path.Combine(pythonBaseFolder, Properties.Settings.Default.PythonRuntimeFolder);
+            PythonExecutable = Path.Combine(pythonPath, "python.exe");
+
             JsManager = joystickManager;
             MsfsCache = msfsCache;
             ReadConfiguration();
@@ -170,7 +175,7 @@ namespace MobiFlight.Scripts
 
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
-                    FileName = PYTHON_EXECUTABLE,
+                    FileName = PythonExecutable,
                     Arguments = ($"\"{ScriptDictionary[script]}\""),
                     CreateNoWindow = true,
                     UseShellExecute = false,

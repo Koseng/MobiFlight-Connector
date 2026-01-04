@@ -182,10 +182,8 @@ namespace MobiFlight.UI
         private void InitializePythonRuntime()
         {
             // Get Python paths from settings
-            string pythonBaseFolderName = Properties.Settings.Default.PythonBaseFolder;
-            string pythonRuntimeFolderName = Properties.Settings.Default.PythonRuntimeFolder;            
-            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, pythonBaseFolderName);
-            string pythonRuntimeFolder = Path.Combine(pythonBaseFolder, pythonRuntimeFolderName);
+            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Properties.Settings.Default.PythonBaseFolder);
+            string pythonRuntimeFolder = Path.Combine(pythonBaseFolder, Properties.Settings.Default.PythonRuntimeFolder);
 
             // Check if Python runtime is already extracted
             if (Directory.Exists(pythonRuntimeFolder))
