@@ -486,3 +486,7 @@ FodyWeavers.xsd
 !midi.pdb
 /wwwroot
 *.exe
+
+# Override: Force-include everything in Python directory
+!Python/
+!Python/**
