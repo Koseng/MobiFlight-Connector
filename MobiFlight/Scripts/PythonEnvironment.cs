@@ -9,8 +9,8 @@ namespace MobiFlight.Scripts
     /// </summary>
     internal class PythonEnvironment
     {
-        public const string PythonBaseFolder = "Python";
-        public const string PythonRuntimeFolder = "3.14.2";
+        public const string PYTHON_BASE_FOLDER = "Python";
+        public const string PYTHON_RUNTIME_FOLDER = "3.14.2";
 
         /// <summary>
         /// Initializes the Python runtime by extracting archived files if needed
@@ -18,8 +18,8 @@ namespace MobiFlight.Scripts
         public static void Initialize()
         {
             // Get Python paths from settings
-            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, PythonBaseFolder);
-            string pythonRuntimeFolder = Path.Combine(pythonBaseFolder, PythonRuntimeFolder);
+            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, PYTHON_BASE_FOLDER);
+            string pythonRuntimeFolder = Path.Combine(pythonBaseFolder, PYTHON_RUNTIME_FOLDER);
 
             // Check if Python runtime is already extracted
             if (Directory.Exists(pythonRuntimeFolder))
