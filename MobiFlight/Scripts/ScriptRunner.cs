@@ -45,8 +45,8 @@ namespace MobiFlight.Scripts
         public ScriptRunner(JoystickManager joystickManager, SimConnectCacheInterface msfsCache)
         {
             // Get Python paths from settings                     
-            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Properties.Settings.Default.PythonBaseFolder);
-            string pythonPath = Path.Combine(pythonBaseFolder, Properties.Settings.Default.PythonRuntimeFolder);
+            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, PythonEnvironment.PythonBaseFolder);
+            string pythonPath = Path.Combine(pythonBaseFolder, PythonEnvironment.PythonRuntimeFolder);
             PythonExecutable = Path.Combine(pythonPath, "python.exe");
 
             JsManager = joystickManager;

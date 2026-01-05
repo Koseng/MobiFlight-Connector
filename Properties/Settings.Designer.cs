@@ -647,29 +647,5 @@ namespace MobiFlight.Properties {
                 this["ProSimMaxRetryAttempts"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Python")]
-        public string PythonBaseFolder {
-            get {
-                return ((string)(this["PythonBaseFolder"]));
-            }
-            set {
-                this["PythonBaseFolder"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3.14.2")]
-        public string PythonRuntimeFolder {
-            get {
-                return ((string)(this["PythonRuntimeFolder"]));
-            }
-            set {
-                this["PythonRuntimeFolder"] = value;
-            }
-        }
     }
 }

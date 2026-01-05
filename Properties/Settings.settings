@@ -159,11 +159,5 @@
     <Setting Name="ProSimMaxRetryAttempts" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
-    <Setting Name="PythonBaseFolder" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Python</Value>
-    </Setting>
-    <Setting Name="PythonRuntimeFolder" Type="System.String" Scope="User">
-      <Value Profile="(Default)">3.14.2</Value>
-    </Setting>
   </Settings>
 </SettingsFile>

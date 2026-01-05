@@ -463,6 +463,7 @@
     <Compile Include="HubHop\Msfs2020HubhopPresetList.cs" />
     <Compile Include="MobiFlight\PortDetails.cs" />
     <Compile Include="MobiFlight\Joysticks\Winwing\CduChar.cs" />
+    <Compile Include="MobiFlight\Scripts\PythonEnvironment.cs" />
     <Compile Include="MobiFlight\Scripts\UserMessageCodes.cs" />
     <Compile Include="MobiFlight\ThreadSafeWebView2.cs">
       <SubType>Component</SubType>
