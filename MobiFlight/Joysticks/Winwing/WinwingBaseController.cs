@@ -10,13 +10,15 @@ namespace MobiFlight.Joysticks.Winwing
 {
     internal class WinwingBaseController : Joystick
     {
-        private WinwingDisplayControl DisplayControl;
-
-        private List<IBaseDevice> LcdDevices = new List<IBaseDevice>();
-        private List<ListItem<IBaseDevice>> LedDevices = new List<ListItem<IBaseDevice>>();
+        protected int ProductId = 0;
+        protected readonly int VendorId = 0x4098;
+        protected WinwingDisplayControl DisplayControl;
+        protected List<IBaseDevice> LcdDevices = new List<IBaseDevice>();
+        protected List<ListItem<IBaseDevice>> LedDevices = new List<ListItem<IBaseDevice>>();
 
         public WinwingBaseController(SharpDX.DirectInput.Joystick joystick, JoystickDefinition def, int productId, WebSocketServer server) : base(joystick, def)
         {
+            ProductId = productId;
             Log.Instance.log($"WinwingBaseController - New WinwingBaseController ProductId={productId.ToString("X")}", LogSeverity.Debug);
             DisplayControl = new WinwingDisplayControl(productId, server);
             Log.Instance.log($"WinwingBaseController - Controller Name={DisplayControl.GetControllerName()}", LogSeverity.Debug);
