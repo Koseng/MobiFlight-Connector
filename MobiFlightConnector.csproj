@@ -406,6 +406,7 @@
     <Compile Include="MobiFlight\Joysticks\WingFlex\FcuCube.cs" />
     <Compile Include="MobiFlight\Joysticks\WingFlex\FcuCubeReport.cs" />
     <Compile Include="MobiFlight\Joysticks\Winwing\WinwingAgp.cs" />
+    <Compile Include="MobiFlight\Joysticks\Winwing\WinwingBaseController.cs" />
     <Compile Include="MobiFlight\Joysticks\Winwing\WinwingEcam.cs" />
     <Compile Include="MobiFlight\Joysticks\Winwing\WinwingAirbusSidestick.cs" />
     <Compile Include="MobiFlight\Joysticks\Winwing\Winwing3Pdc.cs" />
