@@ -55,7 +55,6 @@ namespace MobiFlight.Scripts
             GetAvailableScripts();
         }
 
-
         private string[] SubstituteKeywords(string[] productIds)
         {
             if (productIds[0] != WINWING_CDUS_KEYWORD)
