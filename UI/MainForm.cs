@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using MobiFlight.InputConfig;
 using Newtonsoft.Json;
 using System.IO;
-using System.IO.Compression;
 using MobiFlight.BrowserMessages.Incoming;
 using MobiFlight.BrowserMessages;
 using MobiFlight.BrowserMessages.Outgoing;
