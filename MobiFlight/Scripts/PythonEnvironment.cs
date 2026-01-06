@@ -37,10 +37,9 @@ namespace MobiFlight.Scripts
 
             // Ensure Python base folder exists
             if (!Directory.Exists(pythonBaseFolder))
-            {
-                string errorMessage = $"Python folder not found: {pythonBaseFolder}";
-                Log.Instance.log(errorMessage, LogSeverity.Error);
-                throw new DirectoryNotFoundException(errorMessage);
+            { 
+                Log.Instance.log($"Python folder not found: {pythonBaseFolder}", LogSeverity.Error);
+                return;
             }
 
             // Delete all existing folders in Python base folder before extraction
@@ -64,9 +63,8 @@ namespace MobiFlight.Scripts
 
             if (zipFiles.Length == 0)
             {
-                string errorMessage = "No Python runtime .zip files found to extract.";
-                Log.Instance.log(errorMessage, LogSeverity.Error);
-                throw new FileNotFoundException(errorMessage);
+                Log.Instance.log("No Python runtime .zip files found to extract.", LogSeverity.Error);         
+                return;
             }
 
             Log.Instance.log($"Found {zipFiles.Length} Python runtime archive(s) to extract.", LogSeverity.Info);

@@ -155,42 +155,6 @@ namespace MobiFlight.Scripts.Tests
                 "python.exe should not be modified when it already exists");
         }
 
-        [TestMethod()]
-        public void Initialize_WithNoPythonFolder_ThrowsException()
-        {
-            // Arrange: Delete Python base folder
-            Directory.Delete(testPythonBaseFolder, true);
-
-            // Act & Assert: Should throw DirectoryNotFoundException
-            DirectoryNotFoundException exception = Assert.ThrowsExactly<DirectoryNotFoundException>(() =>
-            {
-                PythonEnvironment.Initialize(testBaseDirectory);
-            });
-
-            // Verify exception message contains useful information
-            StringAssert.Contains(exception.Message, "Python folder not found");
-        }
-
-        [TestMethod()]
-        public void Initialize_WithNoZipFiles_ThrowsException()
-        {
-            // Arrange: Delete all zip files
-            string[] zipFiles = Directory.GetFiles(testPythonBaseFolder, "*.zip");
-            foreach (string zipFile in zipFiles)
-            {
-                File.Delete(zipFile);
-            }
-
-            // Act & Assert: Should throw FileNotFoundException
-            FileNotFoundException exception = Assert.ThrowsExactly<FileNotFoundException>(() =>
-            {
-                PythonEnvironment.Initialize(testBaseDirectory);
-            });
-
-            // Verify exception message contains useful information
-            StringAssert.Contains(exception.Message, "No Python runtime .zip files found");
-        }
-
 
         [TestMethod()]
         public void Initialize_ZipPreserved_AfterExtraction()
