@@ -10,19 +10,20 @@ namespace MobiFlight.Scripts
     internal class PythonEnvironment
     {
         public const string PYTHON_BASE_FOLDER = "Python";
-        public const string PYTHON_RUNTIME_FOLDER = "3.14.2";
+        public const string PYTHON_RUNTIME_VERSION = "3.14.2";
+        public static string PathPythonExecutable;
 
         /// <summary>
         /// Initializes the Python runtime by extracting archived files if needed
         /// </summary>
         public static void Initialize()
-        {
-            // Get Python paths from settings
+        {                             
             string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, PYTHON_BASE_FOLDER);
-            string pythonRuntimeFolder = Path.Combine(pythonBaseFolder, PYTHON_RUNTIME_FOLDER);
+            string pythonRuntimeFolder = Path.Combine(pythonBaseFolder, PYTHON_RUNTIME_VERSION);                                
+            PathPythonExecutable = Path.Combine(pythonRuntimeFolder, "python.exe");
 
-            // Check if Python runtime is already extracted
-            if (Directory.Exists(pythonRuntimeFolder))
+            // Check if Python runtime does already exist
+            if (File.Exists(PathPythonExecutable))
             {
                 Log.Instance.log("Python runtime already initialized.", LogSeverity.Debug);
                 return;
@@ -37,6 +38,22 @@ namespace MobiFlight.Scripts
 
             try
             {
+                // Delete all existing folders in Python base folder before extraction
+                string[] existingFolders = Directory.GetDirectories(pythonBaseFolder);
+                foreach (string folder in existingFolders)
+                {
+                    try
+                    {
+                        Log.Instance.log($"Deleting existing Python folder: {Path.GetFileName(folder)}", LogSeverity.Info);
+                        Directory.Delete(folder, true);
+                        Log.Instance.log($"Successfully deleted: {Path.GetFileName(folder)}", LogSeverity.Debug);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Instance.log($"Failed to delete folder {Path.GetFileName(folder)}: {ex.Message}", LogSeverity.Error);
+                    }
+                }
+
                 // Find all .zip files in Python folder
                 string[] zipFiles = Directory.GetFiles(pythonBaseFolder, "*.zip", SearchOption.TopDirectoryOnly);
 
@@ -64,7 +81,7 @@ namespace MobiFlight.Scripts
                 }
 
                 // Verify extraction was successful
-                if (Directory.Exists(pythonRuntimeFolder))
+                if (File.Exists(PathPythonExecutable))
                 {
                     Log.Instance.log("Python runtime successfully initialized.", LogSeverity.Info);
                 }

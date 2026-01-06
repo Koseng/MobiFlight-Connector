@@ -44,11 +44,7 @@ namespace MobiFlight.Scripts
 
         public ScriptRunner(JoystickManager joystickManager, SimConnectCacheInterface msfsCache)
         {
-            // Get Python paths from settings                     
-            string pythonBaseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, PythonEnvironment.PYTHON_BASE_FOLDER);
-            string pythonPath = Path.Combine(pythonBaseFolder, PythonEnvironment.PYTHON_RUNTIME_FOLDER);
-            PythonExecutable = Path.Combine(pythonPath, "python.exe");
-
+            PythonExecutable = PythonEnvironment.PathPythonExecutable;
             JsManager = joystickManager;
             MsfsCache = msfsCache;
             ReadConfiguration();
@@ -342,6 +338,7 @@ namespace MobiFlight.Scripts
             Log.Instance.log($"ScriptRunner - Start().", LogSeverity.Debug);
             IsInPlayMode = true;
             string currentAircraftDescription = MsfsCache.IsConnected() ? AircraftPath : AircraftName;
+            currentAircraftDescription = "_fnx_3_";
             NewAircraftRequestQueue.Enqueue(currentAircraftDescription);
             Task myTask = Task.Run(async () => { await ProcessAircraftRequests(CancellationTokenSource.Token); });
         }
