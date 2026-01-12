@@ -76,8 +76,19 @@ namespace MobiFlight.Joysticks.Winwing
 
         public override void SetOutputDeviceState(string name, byte state)
         {
-            // Check for value change is done in display control
-            DisplayControl.SetLed(name, state);
+            if (name == "LED Percentage" && state == 0)
+            {
+                // Ignore LED Brightness Percentage value 0. 
+                // Workaround for issue setting LED Brightness to 0 on stop in test mode.
+                // Since on startup the LED brightness is not set to a fixed value,
+                // LED brightness might stay 0 forever, depending on the profile. 
+                // LEDs can still be turned on and off via other output signals.
+            }
+            else
+            {
+                // Check for value change is done in display control
+                DisplayControl.SetLed(name, state);
+            }
         }
 
         public override List<IBaseDevice> GetAvailableLcdDevices()
