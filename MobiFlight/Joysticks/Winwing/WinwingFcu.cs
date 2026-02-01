@@ -165,9 +165,9 @@ namespace MobiFlight.Joysticks.Winwing
 
                 if (DoRetrigger)
                 {
-                    PreviousReport.ButtonState = ~PreviousReport.ButtonState; // to retrigger
-                    PreviousReport.ButtonState2 = ~PreviousReport.ButtonState2; // to retrigger
-                    PreviousReport.ButtonState3 = ~PreviousReport.ButtonState3; // to retrigger
+                    PreviousReport.ButtonState = ~CurrentReport.ButtonState; // to retrigger
+                    PreviousReport.ButtonState2 = ~CurrentReport.ButtonState2; // to retrigger
+                    PreviousReport.ButtonState3 = ~CurrentReport.ButtonState3; // to retrigger
                     DoRetrigger = false;
                 }
 
