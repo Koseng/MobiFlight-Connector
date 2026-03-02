@@ -203,7 +203,37 @@ namespace MobiFlight.Joysticks.AuthentiKit
         /// <returns>True if the change exceeds the threshold; otherwise, false.</returns>
         private static bool ExceedsThreshold(int oldValue, int newValue)
         {
-            return Math.Abs(oldValue - newValue) >= 2 << 4;
+            return Math.Abs(oldValue - newValue) >= 2 << 3;
+        }
+
+        protected override void EnumerateDevices()
+        {
+            foreach (DeviceObjectInstance device in this.DIJoystick.GetObjects().ToList().OrderBy((a) => a.Usage))
+            {
+                this.DIJoystick.GetObjectInfoById(device.ObjectId);
+
+                bool IsAxis = (device.ObjectId.Flags & DeviceObjectTypeFlags.AbsoluteAxis) > 0;
+                bool IsButton = (device.ObjectId.Flags & DeviceObjectTypeFlags.Button) > 0;
+                bool IsPOV = (device.ObjectId.Flags & DeviceObjectTypeFlags.PointOfViewController) > 0;
+
+
+                if (IsAxis && Axes.Count < DIJoystick.Capabilities.AxeCount)
+                {
+                    RegisterAxis(device);
+                }
+                else if (IsButton)
+                {
+                    RegisterButton(device);
+                }
+                else if (IsPOV)
+                {
+                    RegisterPOV(device);
+                }
+                else
+                {
+                    continue;
+                }
+            }
         }
     }
 }
