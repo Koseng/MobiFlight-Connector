@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures"
-import { IConfigItem } from "../src/types"
+import { ConfigFile, IConfigItem, Project } from "../src/types"
 
 test.describe("Confirm content and basic functions are working", () => {
   test("Confirm empty list view", async ({ configListPage, page }) => {
@@ -913,6 +913,189 @@ test.describe("Controller device labels are displayed correctly", () => {
         // and it has to be the "Input Action" cell within that "not set" row
         .getByRole("cell", { name: "Input Action", exact: true }),
     ).toBeVisible()
+  })
+
+  test("Confirm Input Action device labels are displayed correctly - 2nd test", async ({
+    configListPage,
+    page,
+  }) => {
+    await configListPage.gotoPage()
+    await configListPage.initControllerDefinitions()
+
+    const configName = "Output config with Input Action has correct labels"
+    const specificProjectProps = {
+      ConfigFiles: [
+        {
+          ConfigItems: [
+            {
+              Active: true,
+              Controller: {
+                Name: "MobiFlight Mega",
+                Serial: "SN-3F1-FDD",
+              },
+              DeviceType: "InputAction",
+              DeviceName: null,
+              GUID: "71278826-2bab-4ed6-9745-96e737c3669a",
+              Name: configName,
+              Type: "OutputConfigItem",
+            } as Partial<IConfigItem>,
+          ],
+        } as Partial<ConfigFile>,
+      ],
+    } as Partial<Project>
+    await configListPage.mobiFlightPage.initWithTestDataAndSpecificProjectProps(
+      specificProjectProps,
+    )
+
+    const row = page.getByRole("row", { name: configName })
+    await expect(row).toBeVisible()
+
+    const inputActionLabel = row.getByTestId("device-name")
+    await expect(inputActionLabel).toBeVisible()
+    await expect(inputActionLabel).toHaveText("Input Action")
+  })
+
+  test("Confirm Input configs without any device are displayed correctly", async ({
+    configListPage,
+    page,
+  }) => {
+    await configListPage.gotoPage()
+    await configListPage.initControllerDefinitions()
+
+    const configName = "Input config without any device correct labels"
+    const specificProjectProps = {
+      ConfigFiles: [
+        {
+          ConfigItems: [
+            {
+              Active: true,
+              Controller: {
+                Name: "MobiFlight Mega",
+                Serial: "SN-3F1-FDD",
+              },
+              DeviceType: "-",
+              DeviceName: "",
+              GUID: "71278826-2bab-4ed6-9745-96e737c3669a",
+              Name: configName,
+              Type: "InputConfigItem",
+            } as Partial<IConfigItem>,
+          ],
+        } as Partial<ConfigFile>,
+      ],
+    } as Partial<Project>
+    await configListPage.mobiFlightPage.initWithTestDataAndSpecificProjectProps(
+      specificProjectProps,
+    )
+
+    const row = page.getByRole("row", { name: configName })
+    await expect(row).toBeVisible()
+
+    const inputActionLabel = row.getByTestId("device-name")
+    await expect(inputActionLabel).not.toBeVisible()
+    await expect(row).toHaveText(/not set/)
+  })
+
+  test("Confirm Output Shift Register with multiple pins are displayed correctly", async ({
+    configListPage,
+    page,
+  }) => {
+    await configListPage.gotoPage()
+    await configListPage.initControllerDefinitions()
+
+    const configName = "Output Shift Register with multiple pins"
+    const specificProjectProps = {
+      ConfigFiles: [
+        {
+          ConfigItems: [
+            {
+              Active: true,
+              Controller: {
+                Name: "MobiFlight Mega",
+                Serial: "SN-3F1-FDD",
+              },
+              Device: {
+                Address: "TestShifter",
+                Brightness: 255,
+                Name: "TestShifter",
+                PWM: false,
+                Pin: "Output 0|Output 1|Output 2|Output 3|Output 4|Output 5|Output 6",
+                Type: "ShiftRegister",
+              },
+              DeviceName: "TestShifter",
+              DeviceType: "ShiftRegister",
+              GUID: "71278826-2bab-4ed6-9745-96e737c3669a",
+              Name: configName,
+              Type: "OutputConfigItem",
+            } as Partial<IConfigItem>,
+          ],
+        } as Partial<ConfigFile>,
+      ],
+    } as Partial<Project>
+    await configListPage.mobiFlightPage.initWithTestDataAndSpecificProjectProps(
+      specificProjectProps,
+    )
+
+    const row = page.getByRole("row", { name: configName })
+    await expect(row).toBeVisible()
+
+    const deviceNameLabel = row.getByTestId("device-name")
+    const deviceSubIndices = row.getByTestId("device-sub-index")
+    await expect(deviceNameLabel).toBeVisible()
+    await expect(deviceNameLabel).toHaveText("TestShifter")
+
+    await expect(deviceSubIndices).toBeVisible()
+    await expect(deviceSubIndices).toHaveText("0, 1, 2, 3, 4, 5, 6")
+  })
+
+  test("Confirm Output with multiple devices are displayed correctly", async ({
+    configListPage,
+    page,
+  }) => {
+    await configListPage.gotoPage()
+    await configListPage.initControllerDefinitions()
+
+    const configName = "Output Config with multiple Output Devices"
+    const specificProjectProps = {
+      ConfigFiles: [
+        {
+          ConfigItems: [
+            {
+              Active: true,
+              Controller: {
+                Name: "MobiFlight Mega",
+                Serial: "SN-3F1-FDD",
+              },
+              Device: {
+                Brightness: 255,
+                Name: "LED 1|Backlight |Output 2",
+                Pin: "LED 1|Backlight |Output 2",
+                PwmMode: false,
+                Type: "Output",
+              },
+              DeviceName: "LED 1|Backlight |Output 2",
+              DeviceType: "Output",
+              GUID: "71278826-2bab-4ed6-9745-96e737c3669a",
+              Name: configName,
+              Type: "OutputConfigItem",
+            } as Partial<IConfigItem>,
+          ],
+        } as Partial<ConfigFile>,
+      ],
+    } as Partial<Project>
+    await configListPage.mobiFlightPage.initWithTestDataAndSpecificProjectProps(
+      specificProjectProps,
+    )
+
+    const row = page.getByRole("row", { name: configName })
+    await expect(row).toBeVisible()
+
+    const deviceNameLabel = row.getByTestId("device-name")
+    const deviceSubIndices = row.getByTestId("device-sub-index")
+    await expect(deviceNameLabel).toBeVisible()
+    await expect(deviceNameLabel).toHaveText("LED 1")
+
+    await expect(deviceSubIndices).toBeVisible()
+    await expect(deviceSubIndices).toHaveText("Backlight , Output 2")
   })
 })
 
