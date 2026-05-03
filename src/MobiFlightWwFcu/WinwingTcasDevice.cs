@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,8 +19,10 @@ namespace MobiFlightWwFcu
         private const string BACK_BRIGHTNESS = "Backlight Percentage";
         private const string LED_BRIGHTNESS = "LED Percentage";
         private const string LCD_BRIGHTNESS = "LCD Percentage";
+
         private const string IDENT_NUMBER   = "Ident Value";
         private const string ANN_LIGHT = "LCD Test On/Off";
+        private const string NUMBER_DIGITS = "Number Of Digits";
 
         private Dictionary<string, DisplaySegment> DisplayTestCommands = new Dictionary<string, DisplaySegment>()
         {
@@ -29,7 +32,7 @@ namespace MobiFlightWwFcu
 
         // 7-segment digit packed within a single TCAS "ident" byte (Bits 7..1).
         // Bit-order in the constructor must match the segment order [T, TR, BR, B, BL, TL, M].
-        private static DisplaySegment IdentDigit(int bit)
+        private static DisplaySegment IdentDigit(int bit, char initChar)
         {
             var seg = new DisplaySegment(new Bit[] {
                 new Bit(16, bit), // T
@@ -40,16 +43,17 @@ namespace MobiFlightWwFcu
                 new Bit(24, bit), // TL
                 new Bit(20, bit), // M
             }, true);
+            seg.SetCharacter(initChar);
             return seg;
         }
 
         // Element top byte is byte number in data section. So 0 is start of data section. Header with 17 bytes is not included.
         private Dictionary<string, DisplaySegment> DisplaySetValueSegments = new Dictionary<string, DisplaySegment>()
         {
-            { "IdentThousands", IdentDigit(0) },
-            { "IdentHundreds", IdentDigit(1) },
-            { "IdentTens", IdentDigit(2) },
-            { "IdentOnes", IdentDigit(3) },
+            { "IdentThousands", IdentDigit(0, '{') },
+            { "IdentHundreds", IdentDigit(1, '}') },
+            { "IdentTens", IdentDigit(2, 'o') },
+            { "IdentOnes", IdentDigit(3, 'b') },
         };
 
         private Dictionary<string, byte> LedIdentifiers = new Dictionary<string, byte>()
@@ -64,14 +68,17 @@ namespace MobiFlightWwFcu
         private byte[] RefreshCommand = new byte[0x11];
         private byte[] SetValuesCommand = new byte[0x35];  // 53 bytes: 4 dest addr + 13 header + 36 data
 
+        private int NumberOfCharsShown = 4;
+
         public WinwingTcasDevice(IWinwingMessageSender sender)
         {
             MessageSender = sender;
 
             // Add display options
-            DisplayNameToActionMapping.Add(IDENT_NUMBER, SetIdentNumber);
+            DisplayNameToActionMapping.Add(NUMBER_DIGITS, SetNumberOfCharsShown);
+            DisplayNameToActionMapping.Add(IDENT_NUMBER, SetIdentNumber);            
             DisplayNameToActionMapping.Add(ANN_LIGHT, SetAnnunciatorLightOnOff);
-
+            
             // Add output options
             OutputNameToActionMapping.Add(BACK_BRIGHTNESS, SetBacklightBrightness);
             OutputNameToActionMapping.Add(LED_BRIGHTNESS, SetLedBrightness);
@@ -116,7 +123,6 @@ namespace MobiFlightWwFcu
         public void Connect()
         {
             SendDisplayCommand(SetValuesCommand);
-            SetDisplay(IDENT_NUMBER, "{}ob");
             SetBacklightBrightness(50);
             SetLcdBrightness(100);
 
@@ -204,8 +210,11 @@ namespace MobiFlightWwFcu
 
         private void SetIdentNumber(string number)
         {
-            string padded = number.PadLeft(4, '0');
-            char[] chars = (padded.Length > 4 ? padded.Substring(padded.Length - 4) : padded).ToCharArray();
+            int value = (int)Convert.ToDouble(number, CultureInfo.InvariantCulture);
+            string myNumber = value.ToString(CultureInfo.InvariantCulture);
+
+            string shortened = (myNumber.Length > NumberOfCharsShown ? myNumber.Substring(myNumber.Length - NumberOfCharsShown) : myNumber);
+            char[] chars = shortened.PadLeft(NumberOfCharsShown, '0').PadRight(4, '*').ToCharArray();
 
             string[] segmentNames = new string[] { "IdentThousands", "IdentHundreds", "IdentTens", "IdentOnes" };
             for (int i = 0; i < chars.Length; i++)
@@ -215,6 +224,14 @@ namespace MobiFlightWwFcu
                 SetSegmentDisplayCommand(segment, SetValuesCommand);
             }
             SendDisplayCommand(SetValuesCommand);
+        }
+
+        private void SetNumberOfCharsShown(string number)
+        {
+            int value = (int)Convert.ToDouble(number, CultureInfo.InvariantCulture);
+            int clampedValue = Math.Min(4, Math.Max(0, value));
+            NumberOfCharsShown = clampedValue;
+            LcdCurrentValuesCache[IDENT_NUMBER] = string.Empty; // Reset
         }
 
         private void EmptyDisplay()
