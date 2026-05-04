@@ -1,4 +1,3 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -213,7 +212,7 @@ namespace MobiFlightWwFcu
             int value = (int)Convert.ToDouble(number, CultureInfo.InvariantCulture);
             string myNumber = value.ToString(CultureInfo.InvariantCulture);
 
-            string shortened = (myNumber.Length > NumberOfCharsShown ? myNumber.Substring(myNumber.Length - NumberOfCharsShown) : myNumber);
+            string shortened = (myNumber.Length > NumberOfCharsShown ? myNumber.Substring(0, NumberOfCharsShown) : myNumber);
             char[] chars = shortened.PadLeft(NumberOfCharsShown, '0').PadRight(4, '*').ToCharArray();
 
             string[] segmentNames = new string[] { "IdentThousands", "IdentHundreds", "IdentTens", "IdentOnes" };
