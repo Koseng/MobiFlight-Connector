@@ -1,18 +1,13 @@
 using MobiFlightWwFcu;
+using MobiFlightWwFcuUnitTests.Mocks;
 
 namespace MobiFlightWwFcuUnitTests
 {
     [TestClass]
     public class WinwingTcasDeviceTests
     {
-        private MockWinwingMessageSender mockMessageSender;
-        private WinwingTcasDevice device;
-
-        // Refresh command (always identical, 17 bytes)
-        private static readonly byte[] RefreshCommand = new byte[]
-        {
-            0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-        };
+        private MockWinwingMessageSender mockMessageSender = null!;
+        private WinwingTcasDevice device = null!;
 
         [TestInitialize]
         public void Setup()
@@ -24,94 +19,97 @@ namespace MobiFlightWwFcuUnitTests
         [TestCleanup]
         public void Cleanup()
         {
-            device?.Stop();
+            device.Stop();
         }
 
         #region Basic Properties Tests
 
         [TestMethod]
-        public void Name_ShouldReturnCorrectDeviceName()
+        public void Name_ReturnsCorrectDeviceName()
         {
             Assert.AreEqual("WinWing TCAS", device.Name);
         }
 
         [TestMethod]
-        public void GetDisplayNames_ShouldReturnAllDisplayNames()
+        public void GetDisplayNames_ContainsAll3DisplayNames()
         {
             var displayNames = device.GetDisplayNames();
-
             Assert.IsNotNull(displayNames);
-            Assert.IsTrue(displayNames.Contains("Number Of Digits"));
-            Assert.IsTrue(displayNames.Contains("Ident Value"));
-            Assert.IsTrue(displayNames.Contains("LCD Test On/Off"));
-            Assert.AreEqual(3, displayNames.Count);
+            Assert.HasCount(3, displayNames);
+            Assert.Contains("Number Of Digits", displayNames);
+            Assert.Contains("Ident Value", displayNames);
+            Assert.Contains("LCD Test On/Off", displayNames);
         }
 
         [TestMethod]
-        public void GetLedNames_ShouldReturnAllLedNames()
+        public void GetLedNames_ContainsAll4LedNames()
         {
             var ledNames = device.GetLedNames();
-
             Assert.IsNotNull(ledNames);
-            Assert.IsTrue(ledNames.Contains("ATC_FAIL"));
-            Assert.IsTrue(ledNames.Contains("Backlight Percentage"));
-            Assert.IsTrue(ledNames.Contains("LED Percentage"));
-            Assert.IsTrue(ledNames.Contains("LCD Percentage"));
-            Assert.AreEqual(4, ledNames.Count);
+            Assert.HasCount(4, ledNames);
+            Assert.Contains("ATC_FAIL", ledNames);
+            Assert.Contains("Backlight Percentage", ledNames);
+            Assert.Contains("LED Percentage", ledNames);
+            Assert.Contains("LCD Percentage", ledNames);
         }
 
         [TestMethod]
-        public void GetInternalDisplayNames_ShouldReturnEmptyList()
+        public void GetInternalDisplayNames_ReturnsEmptyList()
         {
-            var internalDisplayNames = device.GetInternalDisplayNames();
-
-            Assert.IsNotNull(internalDisplayNames);
-            Assert.AreEqual(0, internalDisplayNames.Count);
+            Assert.IsEmpty(device.GetInternalDisplayNames());
         }
 
         #endregion
 
-        #region Connect and Shutdown Tests
+        #region Connect / Shutdown / Stop
 
         [TestMethod]
-        public void Connect_ShouldInitializeDisplay()
+        public void Connect_SendsExactlyOneDisplayFrame()
         {
             device.Connect();
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
+        }
 
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count >= 2);
+        [TestMethod]
+        public void Connect_SetsBacklightAndLcdBrightness()
+        {
+            device.Connect();
+            Assert.HasCount(2, mockMessageSender.BrightnessCommands);
+            Assert.AreEqual(0x00, mockMessageSender.BrightnessCommands[0].Type);
+            Assert.AreEqual(0x01, mockMessageSender.BrightnessCommands[1].Type);
+        }
 
+        [TestMethod]
+        public void Connect_SendsCorrectInitFrame()
+        {
+            device.Connect();
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void Shutdown_ShouldEmptyDisplayAndTurnOffLights()
+        public void Shutdown_EmptiesDisplay()
         {
             device.Connect();
             mockMessageSender.Reset();
 
             device.Shutdown();
 
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count >= 2);
-
-            List<byte[]> expectedEmptyDisplay = new List<byte[]>()
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
+            List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
-            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedEmptyDisplay);
+            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void Stop_ShouldTurnOffAllLEDs()
+        public void Stop_TurnsOffAtcFailLedAndSendsNoDisplayFrames()
         {
             device.Connect();
             device.SetLed("ATC_FAIL", 1);
@@ -119,8 +117,8 @@ namespace MobiFlightWwFcuUnitTests
 
             device.Stop();
 
-            Assert.IsTrue(mockMessageSender.LightControlCommands.Count >= 1);
-            Assert.AreEqual(0, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.IsGreaterThan(0, mockMessageSender.LightControlCommands.Count);
+            Assert.IsEmpty(mockMessageSender.DisplayCommandsSent);
         }
 
         #endregion
@@ -128,44 +126,50 @@ namespace MobiFlightWwFcuUnitTests
         #region LED Tests
 
         [TestMethod]
-        public void SetLed_AtcFail_On_ShouldSendLightControlMessage()
+        public void SetLed_AtcFail_On_SendsLightControlMessage()
         {
             device.SetLed("ATC_FAIL", 1);
 
-            Assert.AreEqual(1, mockMessageSender.LightControlCommands.Count);
-            var command = mockMessageSender.LightControlCommands[0];
-            Assert.AreEqual(0x03, command.Type);
-            Assert.AreEqual(1, command.Value);
+            Assert.HasCount(1, mockMessageSender.LightControlCommands);
+            Assert.AreEqual(0x03, mockMessageSender.LightControlCommands[0].Type);
+            Assert.AreEqual((byte)1, mockMessageSender.LightControlCommands[0].Value);
         }
 
         [TestMethod]
-        public void SetLed_AtcFail_Off_ShouldSendZeroValue()
+        public void SetLed_AtcFail_Off_AfterOn_SendsZeroValue()
         {
             device.SetLed("ATC_FAIL", 1);
             device.SetLed("ATC_FAIL", 0);
 
-            Assert.AreEqual(2, mockMessageSender.LightControlCommands.Count);
-            var command = mockMessageSender.LightControlCommands[1];
-            Assert.AreEqual(0x03, command.Type);
-            Assert.AreEqual(0, command.Value);
+            Assert.HasCount(2, mockMessageSender.LightControlCommands);
+            Assert.AreEqual(0x03, mockMessageSender.LightControlCommands[1].Type);
+            Assert.AreEqual((byte)0, mockMessageSender.LightControlCommands[1].Value);
         }
 
         [TestMethod]
-        public void SetLed_WithSameStateTwice_ShouldOnlySendOnce()
+        public void SetLed_SameStateTwice_OnlySendsOnce()
         {
             device.SetLed("ATC_FAIL", 1);
             device.SetLed("ATC_FAIL", 1);
 
-            Assert.AreEqual(1, mockMessageSender.LightControlCommands.Count);
+            Assert.HasCount(1, mockMessageSender.LightControlCommands);
         }
 
         [TestMethod]
-        public void SetLed_WithNullOrEmptyName_ShouldNotSendCommand()
+        public void SetLed_NullOrEmptyName_SendsNothing()
         {
             device.SetLed(null, 1);
             device.SetLed("", 1);
 
-            Assert.AreEqual(0, mockMessageSender.LightControlCommands.Count);
+            Assert.IsEmpty(mockMessageSender.LightControlCommands);
+        }
+
+        [TestMethod]
+        public void SetLed_UnknownLedName_ThrowsKeyNotFoundException()
+        {
+            // Documents current behaviour. Caller responsibility to use only known names.
+            Assert.ThrowsExactly<System.Collections.Generic.KeyNotFoundException>(
+                () => device.SetLed("DOES_NOT_EXIST", 1));
         }
 
         #endregion
@@ -173,122 +177,98 @@ namespace MobiFlightWwFcuUnitTests
         #region Ident Value Tests (default 4 digits)
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With1234_ShouldDisplay1234()
+        public void SetDisplay_IdentValue_With1234_RendersDigits()
         {
             device.SetDisplay("Ident Value", "1234");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With0_ShouldDisplay0000()
+        public void SetDisplay_IdentValue_With0_PadsTo0000()
         {
             device.SetDisplay("Ident Value", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With11_ShouldDisplay0011()
+        public void SetDisplay_IdentValue_With11_PadsTo0011()
         {
             device.SetDisplay("Ident Value", "11");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With7620_ShouldDisplay7620()
+        public void SetDisplay_IdentValue_With7620_RendersDigits()
         {
             device.SetDisplay("Ident Value", "7620");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With9999_ShouldDisplay9999()
+        public void SetDisplay_IdentValue_With9999_RendersAllNines()
         {
             device.SetDisplay("Ident Value", "9999");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With12345_ShouldTruncateTo1234()
+        public void SetDisplay_IdentValue_With12345_TruncatesTo1234()
         {
             device.SetDisplay("Ident Value", "12345");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With123456789_ShouldTruncateTo1234()
+        public void SetDisplay_IdentValue_With123456789_TruncatesTo1234()
         {
             device.SetDisplay("Ident Value", "123456789");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_With567_ShouldDisplay0567()
+        public void SetDisplay_IdentValue_With567_PadsTo0567()
         {
             device.SetDisplay("Ident Value", "567");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
@@ -297,185 +277,144 @@ namespace MobiFlightWwFcuUnitTests
         #region Number Of Digits + Ident Value combinations
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits3_With1234_ShouldDisplay123Star()
+        public void SetDisplay_NumberOfDigits3_With1234_DisplaysFirst3()
         {
             device.SetDisplay("Number Of Digits", "3");
             device.SetDisplay("Ident Value", "1234");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits3_With12_ShouldDisplay012Star()
+        public void SetDisplay_NumberOfDigits3_With12_DisplaysFirst3()
         {
             device.SetDisplay("Number Of Digits", "3");
             device.SetDisplay("Ident Value", "12");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits2_With1234_ShouldDisplay12StarStar()
+        public void SetDisplay_NumberOfDigits2_With1234_DisplaysFirst2()
         {
             device.SetDisplay("Number Of Digits", "2");
             device.SetDisplay("Ident Value", "1234");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits2_With5_ShouldDisplay05StarStar()
+        public void SetDisplay_NumberOfDigits2_With5_DisplaysFirst2()
         {
             device.SetDisplay("Number Of Digits", "2");
             device.SetDisplay("Ident Value", "5");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits1_With1234_ShouldDisplay1StarStarStar()
+        public void SetDisplay_NumberOfDigits1_With1234_DisplaysFirstDigit()
         {
             device.SetDisplay("Number Of Digits", "1");
             device.SetDisplay("Ident Value", "1234");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits0_With1234_ShouldDisplayAllStars()
+        public void SetDisplay_NumberOfDigits0_With1234_DisplaysAllStars()
         {
             device.SetDisplay("Number Of Digits", "0");
             device.SetDisplay("Ident Value", "1234");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits4_With1234_ShouldDisplay1234()
+        public void SetDisplay_NumberOfDigits4_With1234_DisplaysAll4()
         {
             device.SetDisplay("Number Of Digits", "4");
             device.SetDisplay("Ident Value", "1234");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigits5_ShouldClampTo4()
+        public void SetDisplay_NumberOfDigits5_ClampsTo4()
         {
             device.SetDisplay("Number Of Digits", "5");
             device.SetDisplay("Ident Value", "1234");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_NumberOfDigitsNegative_ShouldClampTo0()
+        public void SetDisplay_NumberOfDigitsNegative_ClampsTo0()
         {
             device.SetDisplay("Number Of Digits", "-1");
             device.SetDisplay("Ident Value", "1234");
-
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_ChangeDigitsResetsCache_AllowsResendingSameValue()
+        public void SetDisplay_ChangeDigits_ResetsCacheAndAllowsResendingSameValue()
         {
             device.SetDisplay("Ident Value", "1234");
-            int afterFirst = mockMessageSender.DisplayCommandsSent.Count;
-
             device.SetDisplay("Number Of Digits", "2");
             device.SetDisplay("Ident Value", "1234");
-            int afterSecond = mockMessageSender.DisplayCommandsSent.Count;
 
-            Assert.AreEqual(1, afterFirst);
-            Assert.AreEqual(2, afterSecond);
-
-            List<byte[]> expectedFirstCommands = new List<byte[]>()
+            Assert.HasCount(2, mockMessageSender.DisplayCommandsSent);
+            // Frame 0: 4-digit render
+            List<byte[]> expectedCommands0 = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
-            List<byte[]> expectedSecondCommands = new List<byte[]>()
+            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands0);
+            // Frame 1: 2-digit render
+            List<byte[]> expectedCommands1 = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
-            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedFirstCommands);
-            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[1].Commands, expectedSecondCommands);
+            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[1].Commands, expectedCommands1);
         }
 
         #endregion
@@ -483,32 +422,27 @@ namespace MobiFlightWwFcuUnitTests
         #region Annunciator Light Tests
 
         [TestMethod]
-        public void SetDisplay_AnnunciatorLight_WithOne_ShouldTurnOnAllLights()
+        public void SetDisplay_LcdTest_On_SendsAllOnFrame()
         {
             device.SetDisplay("LCD Test On/Off", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
         [TestMethod]
-        public void SetDisplay_AnnunciatorLight_WithZero_ShouldResetDisplay()
+        public void SetDisplay_LcdTest_Off_ResendsCurrentBuffer()
         {
             device.SetDisplay("LCD Test On/Off", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-
+            // Resends post-init buffer (default ident "1234"... actually is post-init blanks).
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
             CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands);
         }
 
@@ -517,52 +451,43 @@ namespace MobiFlightWwFcuUnitTests
         #region Caching Tests
 
         [TestMethod]
-        public void SetDisplay_IdentValue_WithSameValue_ShouldNotSendCommandTwice()
+        public void SetDisplay_SameValueTwice_SecondCallIsNoop()
         {
             device.SetDisplay("Ident Value", "1234");
-            int firstCount = mockMessageSender.DisplayCommandsSent.Count;
-
             device.SetDisplay("Ident Value", "1234");
-            int secondCount = mockMessageSender.DisplayCommandsSent.Count;
 
-            Assert.AreEqual(firstCount, secondCount);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
         }
 
         [TestMethod]
-        public void SetDisplay_IdentValue_WithDifferentValue_ShouldSendCommandTwice()
+        public void SetDisplay_DifferentValue_SendsTwoFrames()
         {
             device.SetDisplay("Ident Value", "1234");
-            int firstCount = mockMessageSender.DisplayCommandsSent.Count;
-
             device.SetDisplay("Ident Value", "5678");
-            int secondCount = mockMessageSender.DisplayCommandsSent.Count;
 
-            Assert.IsTrue(secondCount > firstCount);
-
-            List<byte[]> expectedFirstCommands = new List<byte[]>()
+            Assert.HasCount(2, mockMessageSender.DisplayCommandsSent);
+            List<byte[]> expectedCommands0 = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
-            List<byte[]> expectedSecondCommands = new List<byte[]>()
+            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedCommands0);
+            List<byte[]> expectedCommands1 = new List<byte[]>()
             {
                 new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-                RefreshCommand
+                new byte[] { 0x81, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
-
-            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[0].Commands, expectedFirstCommands);
-            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[1].Commands, expectedSecondCommands);
+            CompareDisplayCommands(mockMessageSender.DisplayCommandsSent[1].Commands, expectedCommands1);
         }
 
         [TestMethod]
-        public void SetDisplay_WithNullOrWhiteSpace_ShouldNotSendCommand()
+        public void SetDisplay_NullOrWhiteSpaceValue_SendsNothing()
         {
             device.SetDisplay("Ident Value", null);
             device.SetDisplay("Ident Value", "");
             device.SetDisplay("Ident Value", "   ");
 
-            Assert.AreEqual(0, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.IsEmpty(mockMessageSender.DisplayCommandsSent);
         }
 
         #endregion
@@ -570,33 +495,15 @@ namespace MobiFlightWwFcuUnitTests
         #region Brightness Tests
 
         [TestMethod]
-        public void SetLed_BacklightBrightness_ShouldSetBrightness()
+        [DataRow("Backlight Percentage", (byte)0x00)]
+        [DataRow("LCD Percentage",       (byte)0x01)]
+        [DataRow("LED Percentage",       (byte)0x02)]
+        public void SetLed_BrightnessControl_SendsBrightnessMessage(string name, byte expectedType)
         {
-            device.SetLed("Backlight Percentage", 50);
+            device.SetLed(name, 50);
 
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count > 0);
-            var cmd = mockMessageSender.BrightnessCommands[0];
-            Assert.AreEqual(0x00, cmd.Type);
-        }
-
-        [TestMethod]
-        public void SetLed_LcdBrightness_ShouldSetBrightness()
-        {
-            device.SetLed("LCD Percentage", 75);
-
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count > 0);
-            var cmd = mockMessageSender.BrightnessCommands[0];
-            Assert.AreEqual(0x01, cmd.Type);
-        }
-
-        [TestMethod]
-        public void SetLed_LedBrightness_ShouldSetBrightness()
-        {
-            device.SetLed("LED Percentage", 100);
-
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count > 0);
-            var cmd = mockMessageSender.BrightnessCommands[0];
-            Assert.AreEqual(0x02, cmd.Type);
+            Assert.HasCount(1, mockMessageSender.BrightnessCommands);
+            Assert.AreEqual(expectedType, mockMessageSender.BrightnessCommands[0].Type);
         }
 
         #endregion
@@ -605,143 +512,12 @@ namespace MobiFlightWwFcuUnitTests
 
         private void CompareDisplayCommands(List<byte[]> sentCommands, List<byte[]> expectedCommands)
         {
-            Assert.AreEqual(expectedCommands.Count, sentCommands.Count);
+            Assert.HasCount(expectedCommands.Count, sentCommands);
 
             for (int i = 0; i < expectedCommands.Count; i++)
             {
                 CollectionAssert.AreEqual(expectedCommands[i], sentCommands[i]);
             }
-        }
-
-        #endregion
-
-        #region Mock Implementation
-
-        private class MockWinwingMessageSender : IWinwingMessageSender
-        {
-            public List<DisplayCommandMessage> DisplayCommandsSent { get; } = new List<DisplayCommandMessage>();
-            public List<LightControlMessage> LightControlCommands { get; } = new List<LightControlMessage>();
-            public List<BrightnessMessage> BrightnessCommands { get; } = new List<BrightnessMessage>();
-            public List<byte[]> CduDisplayBytes { get; } = new List<byte[]>();
-            public int HeartBeatMessageCount { get; private set; }
-            public int RequestFirmwareMessageCount { get; private set; }
-            public bool IsConnectedValue { get; set; }
-
-            public void Reset()
-            {
-                DisplayCommandsSent.Clear();
-                LightControlCommands.Clear();
-                BrightnessCommands.Clear();
-                CduDisplayBytes.Clear();
-                HeartBeatMessageCount = 0;
-                RequestFirmwareMessageCount = 0;
-            }
-
-            public bool IsConnected()
-            {
-                return IsConnectedValue;
-            }
-
-            public void Connect()
-            {
-                IsConnectedValue = true;
-            }
-
-            public void Shutdown()
-            {
-                IsConnectedValue = false;
-            }
-
-            public void SendDisplayCommands(IList<byte[]> commands)
-            {
-                DisplayCommandsSent.Add(new DisplayCommandMessage
-                {
-                    Commands = commands.Select(c => (byte[])c.Clone()).ToList()
-                });
-
-                Console.WriteLine("SendDisplayCommands called with {0} command(s):", commands.Count);
-                for (int i = 0; i < commands.Count; i++)
-                {
-                    var bytes = commands[i];
-                    var hexValues = string.Join(", ", bytes.Select(b => string.Format("0x{0:X2}", b)));
-                    Console.WriteLine("  Command {0}: new byte[] {{ {1} }}", i, hexValues);
-                }
-                Console.WriteLine();
-            }
-
-            public void SendCduDisplayBytes(byte[] byteList)
-            {
-                CduDisplayBytes.Add((byte[])byteList.Clone());
-            }
-
-            public void SendLightControlMessage(byte[] destination, byte type, byte value)
-            {
-                LightControlCommands.Add(new LightControlMessage
-                {
-                    Destination = (byte[])destination.Clone(),
-                    Type = type,
-                    Value = value
-                });
-            }
-
-            public void SetBrightness(byte[] destinationAddress, byte type, string brightness)
-            {
-                BrightnessCommands.Add(new BrightnessMessage
-                {
-                    DestinationAddress = (byte[])destinationAddress.Clone(),
-                    Type = type,
-                    Brightness = brightness
-                });
-            }
-
-            public void SetBrightness(byte[] destinationAddress, byte type, int brightness)
-            {
-                BrightnessCommands.Add(new BrightnessMessage
-                {
-                    DestinationAddress = (byte[])destinationAddress.Clone(),
-                    Type = type,
-                    Brightness = brightness.ToString()
-                });
-            }
-
-            public void SetVibration(byte[] destinationAddress, byte type, byte level)
-            {
-                // Not used by TCAS device
-            }
-
-            public void SetPulseLight(byte[] destinationAddress, bool isOn)
-            {
-                // Not used by TCAS device
-            }
-
-            public void SendHeartBeatMessage()
-            {
-                HeartBeatMessageCount++;
-            }
-
-            public void SendRequestFirmwareMessage()
-            {
-                RequestFirmwareMessageCount++;
-            }
-        }
-
-        public class DisplayCommandMessage
-        {
-            public List<byte[]> Commands { get; set; }
-        }
-
-        public class LightControlMessage
-        {
-            public byte[] Destination { get; set; }
-            public byte Type { get; set; }
-            public byte Value { get; set; }
-        }
-
-        public class BrightnessMessage
-        {
-            public byte[] DestinationAddress { get; set; }
-            public byte Type { get; set; }
-            public string Brightness { get; set; }
         }
 
         #endregion

@@ -1,12 +1,13 @@
 ﻿using MobiFlightWwFcu;
+using MobiFlightWwFcuUnitTests.Mocks;
 
 namespace MobiFlightWwFcuUnitTests
 {
     [TestClass]
     public class WinwingFcuDeviceTests
     {
-        private MockWinwingMessageSender mockMessageSender;
-        private WinwingFcuDevice device;
+        private MockWinwingMessageSender mockMessageSender = null!;
+        private WinwingFcuDevice device = null!;
 
         [TestInitialize]
         public void Setup()
@@ -35,12 +36,12 @@ namespace MobiFlightWwFcuUnitTests
             var displayNames = device.GetDisplayNames();
 
             Assert.IsNotNull(displayNames);
-            Assert.IsTrue(displayNames.Contains("Speed Value"));
-            Assert.IsTrue(displayNames.Contains("Mach Value"));
-            Assert.IsTrue(displayNames.Contains("Heading Value"));
-            Assert.IsTrue(displayNames.Contains("Altitude Value"));
-            Assert.IsTrue(displayNames.Contains("VS Value"));
-            Assert.AreEqual(19, displayNames.Count);
+            Assert.Contains("Speed Value", displayNames);
+            Assert.Contains("Mach Value", displayNames);
+            Assert.Contains("Heading Value", displayNames);
+            Assert.Contains("Altitude Value", displayNames);
+            Assert.Contains("VS Value", displayNames);
+            Assert.HasCount(19, displayNames);
         }
 
         [TestMethod]
@@ -49,13 +50,13 @@ namespace MobiFlightWwFcuUnitTests
             var ledNames = device.GetLedNames();
 
             Assert.IsNotNull(ledNames);
-            Assert.IsTrue(ledNames.Contains("LOC"));
-            Assert.IsTrue(ledNames.Contains("AP1"));
-            Assert.IsTrue(ledNames.Contains("AP2"));
-            Assert.IsTrue(ledNames.Contains("ATHR"));
-            Assert.IsTrue(ledNames.Contains("APPR"));
-            Assert.IsTrue(ledNames.Contains("EXPED"));
-            Assert.AreEqual(6, ledNames.Count);
+            Assert.Contains("LOC", ledNames);
+            Assert.Contains("AP1", ledNames);
+            Assert.Contains("AP2", ledNames);
+            Assert.Contains("ATHR", ledNames);
+            Assert.Contains("APPR", ledNames);
+            Assert.Contains("EXPED", ledNames);
+            Assert.HasCount(6, ledNames);
         }
 
         [TestMethod]
@@ -64,7 +65,7 @@ namespace MobiFlightWwFcuUnitTests
             var internalDisplayNames = device.GetInternalDisplayNames();
 
             Assert.IsNotNull(internalDisplayNames);
-            Assert.AreEqual(0, internalDisplayNames.Count);
+            Assert.IsEmpty(internalDisplayNames);
         }
 
         #endregion
@@ -76,8 +77,8 @@ namespace MobiFlightWwFcuUnitTests
         {
             device.Connect();
 
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count >= 2);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
+            Assert.IsGreaterThanOrEqualTo(2, mockMessageSender.BrightnessCommands.Count);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -96,8 +97,8 @@ namespace MobiFlightWwFcuUnitTests
 
             device.Shutdown();
 
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
-            Assert.IsTrue(mockMessageSender.LightControlCommands.Count >= 6);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
+            Assert.IsGreaterThanOrEqualTo(6, mockMessageSender.LightControlCommands.Count);
 
             List<byte[]> expectedEmptyDisplay = new List<byte[]>()
             {
@@ -117,8 +118,8 @@ namespace MobiFlightWwFcuUnitTests
 
             device.Stop();
 
-            Assert.IsTrue(mockMessageSender.LightControlCommands.Count >= 6);
-            Assert.AreEqual(0, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.IsGreaterThanOrEqualTo(6, mockMessageSender.LightControlCommands.Count);
+            Assert.IsEmpty(mockMessageSender.DisplayCommandsSent);
         }
 
         #endregion
@@ -130,7 +131,7 @@ namespace MobiFlightWwFcuUnitTests
         {
             device.SetLed("AP1", 1);
 
-            Assert.AreEqual(1, mockMessageSender.LightControlCommands.Count);
+            Assert.HasCount(1, mockMessageSender.LightControlCommands);
             var command = mockMessageSender.LightControlCommands[0];
             Assert.AreEqual(0x05, command.Type);
             Assert.AreEqual(1, command.Value);
@@ -141,7 +142,7 @@ namespace MobiFlightWwFcuUnitTests
         {
             device.SetLed("LOC", 0);
 
-            Assert.AreEqual(1, mockMessageSender.LightControlCommands.Count);
+            Assert.HasCount(1, mockMessageSender.LightControlCommands);
             var command = mockMessageSender.LightControlCommands[0];
             Assert.AreEqual(0x03, command.Type);
             Assert.AreEqual(0, command.Value);
@@ -153,7 +154,7 @@ namespace MobiFlightWwFcuUnitTests
             device.SetLed("AP2", 1);
             device.SetLed("AP2", 1);
 
-            Assert.AreEqual(1, mockMessageSender.LightControlCommands.Count);
+            Assert.HasCount(1, mockMessageSender.LightControlCommands);
         }
 
         [TestMethod]
@@ -162,7 +163,7 @@ namespace MobiFlightWwFcuUnitTests
             device.SetLed("ATHR", 1);
             device.SetLed("ATHR", 0);
 
-            Assert.AreEqual(2, mockMessageSender.LightControlCommands.Count);
+            Assert.HasCount(2, mockMessageSender.LightControlCommands);
         }
 
         [TestMethod]
@@ -171,7 +172,7 @@ namespace MobiFlightWwFcuUnitTests
             device.SetLed(null, 1);
             device.SetLed("", 1);
 
-            Assert.AreEqual(0, mockMessageSender.LightControlCommands.Count);
+            Assert.IsEmpty(mockMessageSender.LightControlCommands);
         }
 
         #endregion
@@ -182,7 +183,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Speed_ShouldUpdateSpeedDisplay()
         {
             device.SetDisplay("Speed Value", "250");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -197,7 +198,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Speed_WithZero_ShouldDisplay000()
         {
             device.SetDisplay("Speed Value", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -212,7 +213,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Speed_WithMaxValue_ShouldDisplayCorrectly()
         {
             device.SetDisplay("Speed Value", "999");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -227,7 +228,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_MachValue_ShouldUpdateMachDisplay()
         {
             device.SetDisplay("Mach Value", "0.78");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -242,7 +243,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_SpeedDot_WithOne_ShouldShowDot()
         {
             device.SetDisplay("Speed Dot", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -257,7 +258,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_SpeedDot_WithZero_ShouldHideDot()
         {
             device.SetDisplay("Speed Dot", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -272,7 +273,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_SpeedDashes_ShouldDisplayDashes()
         {
             device.SetDisplay("Speed Dashes On/Off", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -287,7 +288,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_MachMode_WithOne_ShouldShowMachLabel()
         {
             device.SetDisplay("Mach Mode On/Off", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -302,7 +303,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_MachMode_WithZero_ShouldShowSpeedLabel()
         {
             device.SetDisplay("Mach Mode On/Off", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -317,7 +318,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_MachMode_WithTwo_ShouldShowNoLabel()
         {
             device.SetDisplay("Mach Mode On/Off", "2");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -332,7 +333,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_SpeedValue_With100_ShouldDisplay100()
         {
             device.SetDisplay("Speed Value", "100");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -347,7 +348,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_SpeedValue_With250_ShouldDisplay250()
         {
             device.SetDisplay("Speed Value", "250");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -362,7 +363,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_SpeedValue_With350_ShouldDisplay350()
         {
             device.SetDisplay("Speed Value", "350");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -377,7 +378,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_MachValue_With000_ShouldDisplay000()
         {
             device.SetDisplay("Mach Value", "0.00");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -392,7 +393,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_MachValue_With078_ShouldDisplay078()
         {
             device.SetDisplay("Mach Value", "0.78");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -407,7 +408,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_MachValue_With082_ShouldDisplay082()
         {
             device.SetDisplay("Mach Value", "0.82");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -426,7 +427,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Heading_ShouldUpdateHeadingDisplay()
         {
             device.SetDisplay("Heading Value", "180");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -441,7 +442,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Heading_WithZero_ShouldDisplay000()
         {
             device.SetDisplay("Heading Value", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -456,7 +457,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Heading_WithMax_ShouldDisplay360()
         {
             device.SetDisplay("Heading Value", "360");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -471,7 +472,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_TRKValue_ShouldUpdateTrackDisplay()
         {
             device.SetDisplay("TRK Value", "270");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -486,7 +487,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_HeadingDashes_ShouldDisplayDashes()
         {
             device.SetDisplay("Heading Dashes On/Off", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -501,7 +502,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_HeadingDot_WithOne_ShouldShowDot()
         {
             device.SetDisplay("Heading Dot", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -516,7 +517,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_HeadingDot_WithZero_ShouldHideDot()
         {
             device.SetDisplay("Heading Dot", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -535,7 +536,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Altitude_ShouldUpdateAltitudeDisplay()
         {
             device.SetDisplay("Altitude Value", "10000");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -550,11 +551,11 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Altitude_WithZero_ShouldDisplay00000()
         {
             device.SetDisplay("Altitude Value", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
-                new byte[] { 0x10, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0xFA, 0xFA, 0xA9, 0xAF, 0xAF, 0xAF, 0xAC, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xAF, 0x7F, 0x63, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+                new byte[] { 0x10, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0xFA, 0xFA, 0xA9, 0xAF, 0xAF, 0xAF, 0xAC, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xAF, 0x7F, 0x63, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },                
                 new byte[] { 0x10, 0xBB, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
             };
 
@@ -565,7 +566,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_Altitude_WithMaxValue_ShouldDisplayCorrectly()
         {
             device.SetDisplay("Altitude Value", "99999");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -580,7 +581,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_AltitudeDot_WithZero_ShouldShowAltNoDot()
         {
             device.SetDisplay("Altitude Dot", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -595,8 +596,8 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_AltitudeDot_WithOne_ShouldShowAltWithDot()
         {
             device.SetDisplay("Altitude Dot", "1");
-            Assert.IsTrue(mockMessageSender.DisplayCommandsSent.Count > 0);
-
+            Assert.IsNotEmpty(mockMessageSender.DisplayCommandsSent);
+            
             List<byte[]> expectedCommands = new List<byte[]>()
             {
                 new byte[] { 0x10, 0xBB, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0xFA, 0xFA, 0xA9, 0xAF, 0xAF, 0xAF, 0xAC, 0xBF, 0x1F, 0xB6, 0xBF, 0xBF, 0xAF, 0x7F, 0x73, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
@@ -608,7 +609,7 @@ namespace MobiFlightWwFcuUnitTests
 
         private void CompareDisplayCommands(List<byte[]> sentCommands, List<byte[]> expectedCommands)
         {
-            Assert.AreEqual(expectedCommands.Count, sentCommands.Count);
+            Assert.HasCount(expectedCommands.Count, sentCommands);
 
             for (int i = 0; i < expectedCommands.Count; i++)
             {
@@ -620,7 +621,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_AltitudeDot_WithTwenty_ShouldHideAltNoDot()
         {
             device.SetDisplay("Altitude Dot", "20");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -635,7 +636,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_AltitudeDot_WithTwentyOne_ShouldHideAltWithDot()
         {
             device.SetDisplay("Altitude Dot", "21");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -654,7 +655,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VS_WithPositiveValue_ShouldUpdateVSDisplay()
         {
             device.SetDisplay("VS Value", "1500");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -669,7 +670,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VS_WithNegativeValue_ShouldShowMinusSign()
         {
             device.SetDisplay("VS Value", "-2000");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -684,7 +685,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VS_WithZero_ShouldDisplayCorrectly()
         {
             device.SetDisplay("VS Value", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -699,7 +700,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VS_WithHundredsZero_ShouldShowAirbusStyle()
         {
             device.SetDisplay("VS Value", "1500");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -714,7 +715,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_FPA_WithPositiveValue_ShouldUpdateFPADisplay()
         {
             device.SetDisplay("FPA Value", "2.5");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -729,7 +730,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_FPA_WithNegativeValue_ShouldShowMinusSign()
         {
             device.SetDisplay("FPA Value", "-3.2");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -744,7 +745,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VSDashes_WithOne_ShouldShowDashesWithLvlCh()
         {
             device.SetDisplay("VS Dashes On/Off", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -759,7 +760,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VSDashes_WithZero_ShouldHideDashesWithLvlCh()
         {
             device.SetDisplay("VS Dashes On/Off", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -774,7 +775,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VSDashes_WithTwentyOne_ShouldShowDashesNoLvlCh()
         {
             device.SetDisplay("VS Dashes On/Off", "21");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -789,7 +790,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_VSDashes_WithTwenty_ShouldHideDashesNoLvlCh()
         {
             device.SetDisplay("VS Dashes On/Off", "20");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -808,7 +809,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_TRKMode_WithZero_ShouldShowHeadingAndVSMode()
         {
             device.SetDisplay("TRK Mode On/Off", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -823,7 +824,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_TRKMode_WithOne_ShouldShowTrackAndFPAMode()
         {
             device.SetDisplay("TRK Mode On/Off", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -838,7 +839,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_TRKMode_WithTwo_ShouldHideBothModes()
         {
             device.SetDisplay("TRK Mode On/Off", "2");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -853,7 +854,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_TRKMode_WithThreeDigits_ShouldSetIndividualModes()
         {
             device.SetDisplay("TRK Mode On/Off", "100");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -869,27 +870,27 @@ namespace MobiFlightWwFcuUnitTests
         #region Brightness Tests
 
         [TestMethod]
-        public void SetDisplay_BacklightBrightness_ShouldSetBrightness()
+        [DataRow("Backlight Percentage")]
+        [DataRow("LCD Percentage")]
+        [DataRow("LED Percentage")]
+        public void SetDisplay_BrightnessControl_SendsBrightnessMessage(string name)
         {
-            device.SetDisplay("Backlight Percentage", "50");
-
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count > 0);
+            device.SetDisplay(name, "50");
+            Assert.IsNotEmpty(mockMessageSender.BrightnessCommands);
         }
 
-        [TestMethod]
-        public void SetDisplay_LCDBrightness_ShouldSetBrightness()
-        {
-            device.SetDisplay("LCD Percentage", "75");
+        #endregion
 
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count > 0);
-        }
+        #region Negative Tests
 
         [TestMethod]
-        public void SetDisplay_LEDBrightness_ShouldSetBrightness()
+        public void SetDisplay_UnknownDisplayName_ThrowsKeyNotFoundException()
         {
-            device.SetDisplay("LED Percentage", "100");
-
-            Assert.IsTrue(mockMessageSender.BrightnessCommands.Count > 0);
+            // Documents current behaviour: unknown display names hit the
+            // LcdCurrentValuesCache indexer and throw. Callers must use
+            // names from GetDisplayNames() only.
+            Assert.ThrowsExactly<KeyNotFoundException>(
+                () => device.SetDisplay("DOES_NOT_EXIST", "1"));
         }
 
         #endregion
@@ -900,7 +901,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_AnnunciatorLight_WithOne_ShouldTurnOnAllLights()
         {
             device.SetDisplay("LCD Test On/Off", "1");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -915,7 +916,7 @@ namespace MobiFlightWwFcuUnitTests
         public void SetDisplay_AnnunciatorLight_WithZero_ShouldResetDisplay()
         {
             device.SetDisplay("LCD Test On/Off", "0");
-            Assert.AreEqual(1, mockMessageSender.DisplayCommandsSent.Count);
+            Assert.HasCount(1, mockMessageSender.DisplayCommandsSent);
 
             List<byte[]> expectedCommands = new List<byte[]>()
             {
@@ -951,7 +952,7 @@ namespace MobiFlightWwFcuUnitTests
             device.SetDisplay("Speed Value", "300");
             int secondCount = mockMessageSender.DisplayCommandsSent.Count;
 
-            Assert.IsTrue(secondCount > firstCount);
+            Assert.IsGreaterThan(firstCount, secondCount);
         }
 
         [TestMethod]
@@ -961,138 +962,7 @@ namespace MobiFlightWwFcuUnitTests
             device.SetDisplay("Speed Value", "");
             device.SetDisplay("Speed Value", "   ");
 
-            Assert.AreEqual(0, mockMessageSender.DisplayCommandsSent.Count);
-        }
-
-        #endregion
-
-        #region Mock Implementation
-
-        private class MockWinwingMessageSender : IWinwingMessageSender
-        {
-            public List<DisplayCommandMessage> DisplayCommandsSent { get; } = new List<DisplayCommandMessage>();
-            public List<LightControlMessage> LightControlCommands { get; } = new List<LightControlMessage>();
-            public List<BrightnessMessage> BrightnessCommands { get; } = new List<BrightnessMessage>();
-            public List<byte[]> CduDisplayBytes { get; } = new List<byte[]>();
-            public int HeartBeatMessageCount { get; private set; }
-            public int RequestFirmwareMessageCount { get; private set; }
-            public bool IsConnectedValue { get; set; }
-
-            public void Reset()
-            {
-                DisplayCommandsSent.Clear();
-                LightControlCommands.Clear();
-                BrightnessCommands.Clear();
-                CduDisplayBytes.Clear();
-                HeartBeatMessageCount = 0;
-                RequestFirmwareMessageCount = 0;
-            }
-
-            public bool IsConnected()
-            {
-                return IsConnectedValue;
-            }
-
-            public void Connect()
-            {
-                IsConnectedValue = true;
-            }
-
-            public void Shutdown()
-            {
-                IsConnectedValue = false;
-            }
-
-            public void SendDisplayCommands(IList<byte[]> commands)
-            {
-                DisplayCommandsSent.Add(new DisplayCommandMessage
-                {
-                    Commands = commands.Select(c => (byte[])c.Clone()).ToList()
-                });
-
-                Console.WriteLine("SendDisplayCommands called with {0} command(s):", commands.Count);
-                for (int i = 0; i < commands.Count; i++)
-                {
-                    var bytes = commands[i];
-                    var hexValues = string.Join(", ", bytes.Select(b => string.Format("0x{0:X2}", b)));
-                    Console.WriteLine("  Command {0}: new byte[] {{ {1} }}", i, hexValues);
-                }
-                Console.WriteLine();
-            }
-
-            public void SendCduDisplayBytes(byte[] byteList)
-            {
-                CduDisplayBytes.Add((byte[])byteList.Clone());
-            }
-
-            public void SendLightControlMessage(byte[] destination, byte type, byte value)
-            {
-                LightControlCommands.Add(new LightControlMessage
-                {
-                    Destination = (byte[])destination.Clone(),
-                    Type = type,
-                    Value = value
-                });
-            }
-
-            public void SetBrightness(byte[] destinationAddress, byte type, string brightness)
-            {
-                BrightnessCommands.Add(new BrightnessMessage
-                {
-                    DestinationAddress = (byte[])destinationAddress.Clone(),
-                    Type = type,
-                    Brightness = brightness
-                });
-            }
-
-            public void SetBrightness(byte[] destinationAddress, byte type, int brightness)
-            {
-                BrightnessCommands.Add(new BrightnessMessage
-                {
-                    DestinationAddress = (byte[])destinationAddress.Clone(),
-                    Type = type,
-                    Brightness = brightness.ToString()
-                });
-            }
-
-            public void SetVibration(byte[] destinationAddress, byte type, byte level)
-            {
-                // Not used by FCU device
-            }
-
-            public void SetPulseLight(byte[] destinationAddress, bool isOn)
-            {
-                // Not used by FCU device
-            }
-
-            public void SendHeartBeatMessage()
-            {
-                HeartBeatMessageCount++;
-            }
-
-            public void SendRequestFirmwareMessage()
-            {
-                RequestFirmwareMessageCount++;
-            }
-        }
-
-        public class DisplayCommandMessage
-        {
-            public List<byte[]> Commands { get; set; }
-        }
-
-        public class LightControlMessage
-        {
-            public byte[] Destination { get; set; }
-            public byte Type { get; set; }
-            public byte Value { get; set; }
-        }
-
-        public class BrightnessMessage
-        {
-            public byte[] DestinationAddress { get; set; }
-            public byte Type { get; set; }
-            public string Brightness { get; set; }
+            Assert.IsEmpty(mockMessageSender.DisplayCommandsSent);
         }
 
         #endregion
